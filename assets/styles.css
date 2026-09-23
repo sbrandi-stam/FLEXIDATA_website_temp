@@ -159,7 +159,17 @@ section[id],footer[id]{scroll-margin-top:var(--top)}
 .day[aria-pressed="true"]{border-color:var(--navy);background:var(--navy);color:#fff}
 .day[aria-pressed="true"] .wx{color:#BFD0DC}
 .clock{font-size:14px;font-weight:600;background:var(--bg);padding:5px 10px;border-radius:8px}
+.chart-stack{grid-area:chart;display:flex;flex-direction:column;gap:12px;min-width:0}
+.flex-status{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px}
+.flex-status .chart-flag{position:static}
+.flex-status .event-card{position:relative;right:auto;top:auto;flex:1 1 280px;max-width:100%}
+#flexCharts{display:flex;flex-direction:column;gap:12px}
+.chart-card--node{padding:12px 14px 10px;cursor:pointer}
+.chart-card--node.is-sel{box-shadow:0 0 0 4px rgba(16,160,96,.35),var(--shadow)}
+.chart-card__title{margin:0;font-size:16px}
 .chart-wrap{position:relative;height:clamp(300px,38vw,420px)}
+.chart-wrap--node{height:168px}
+.chart-card--node.is-low .chart-wrap--node{height:228px}
 .chart-wrap canvas{width:100%;height:100%;display:block;transition:opacity .22s}
 .sim.is-switching .chart-wrap canvas,.sim.is-switching .kpi__body,.sim.is-switching .legend{opacity:0}
 .chart-flag{position:absolute;top:8px;left:56px;font-family:var(--f-mono);font-size:12px;font-weight:600;padding:5px 10px;border-radius:8px;background:var(--amber-soft);color:var(--amber-ink);border:1.5px solid var(--amber)}
@@ -188,6 +198,9 @@ section[id],footer[id]{scroll-margin-top:var(--top)}
 .check.is-disabled{opacity:.45;cursor:not-allowed}
 .sim[data-mode="flex"] .eff-only,.sim[data-mode="eff"] .flex-only{display:none}
 .sim[data-mode="eff"] .controls .eff-only{flex:1 1 220px}
+.node-bar{grid-area:nodes;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;background:#fff;border:2.5px solid var(--navy);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 16px}
+.node-bar .seg{flex-wrap:wrap}
+.node-bar__speed{display:flex;align-items:center;gap:8px;margin-left:auto}
 .cfg-bar{grid-area:cfg;width:100%;max-width:100%;min-width:0;background:#fff;border:2.5px solid var(--navy);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
 .cfg-cards{display:grid;width:100%;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-width:0}
 .cfg-cards button{display:flex;align-items:center;gap:10px;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;min-height:72px;min-width:0;font:inherit;font-weight:600;font-size:14px;line-height:1.25;color:var(--navy);cursor:pointer}
@@ -359,17 +372,20 @@ input[type=range]{accent-color:var(--green-deep);width:100%}
 .roadmap__track{padding-top:30px}
 
 /* simulator + map side by side */
-.sim{grid-template-columns:minmax(0,1fr) 460px;grid-template-areas:"chart map" "kpi kpi" "ctrl ctrl"}
-.sim[data-mode="eff"]{grid-template-columns:minmax(0,1.15fr) minmax(420px,540px);grid-template-areas:"cfg cfg" "chart kpi" "map ctrl"}
+.sim{grid-template-columns:minmax(0,1.35fr) minmax(320px,440px);grid-template-areas:"nodes nodes" "chart side" "ctrl ctrl"}
+.sim__side{display:contents}
+.sim[data-mode="flex"] .sim__side{display:flex;flex-direction:column;gap:16px;grid-area:side;min-width:0;align-self:stretch}
+.sim[data-mode="flex"] .sim__map{flex:0 0 auto}
+.sim[data-mode="flex"] .kpi{display:flex;flex-direction:column;flex:1 1 auto;position:static;min-height:0}
+.sim[data-mode="flex"] .kpi__body{display:flex;flex-direction:column;gap:8px;flex:1}
+.sim[data-mode="flex"] .kpi__body h3{margin:0!important}
+.sim[data-mode="flex"] .kpi__list{grid-template-columns:1fr 1fr}
+.sim[data-mode="flex"] .kpi__foot{margin-top:auto}
+.sim[data-mode="eff"]{grid-template-columns:minmax(0,1.15fr) minmax(420px,540px);grid-template-areas:"nodes nodes" "cfg cfg" "chart kpi" "map ctrl"}
 .sim .chart-card{grid-area:chart;min-width:0}
 .sim .controls{grid-area:ctrl}
 .sim .kpi{grid-area:kpi;min-width:0}
 .sim[data-mode="eff"] .kpi{position:static}
-.sim[data-mode="flex"] .kpi{position:static}
-.sim[data-mode="flex"] .kpi__body{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 24px;align-items:center}
-.sim[data-mode="flex"] .kpi__body h3{margin:0!important}
-.sim[data-mode="flex"] .kpi__list{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
-.sim[data-mode="flex"] .kpi__foot{grid-column:1/-1;margin-top:0}
 .sim__map{grid-area:map;background:#fff;border:2.5px solid var(--navy);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;min-width:0;scroll-margin-top:var(--top)}
 .sim__map-intro{margin:4px 0 12px}
 .sim__map .map{grid-template-columns:1fr;gap:12px;margin-top:0}
@@ -381,10 +397,11 @@ input[type=range]{accent-color:var(--green-deep);width:100%}
 .sim__map .n4{padding:10px}
 .ktable td,.ktable th{padding-left:6px;padding-right:6px}
 @media (max-width:1100px){
-  .sim{grid-template-columns:minmax(0,1fr);grid-template-areas:"chart" "map" "kpi" "ctrl"}
-  .sim[data-mode="eff"]{grid-template-columns:minmax(0,1fr);grid-template-areas:"cfg" "chart" "map" "kpi" "ctrl"}
+  .sim{grid-template-columns:minmax(0,1fr);grid-template-areas:"nodes" "chart" "map" "kpi" "ctrl"}
+  .sim[data-mode="flex"] .sim__side{display:contents}
+  .sim[data-mode="eff"]{grid-template-columns:minmax(0,1fr);grid-template-areas:"nodes" "cfg" "chart" "map" "kpi" "ctrl"}
   .sim > *{min-width:0;max-width:100%}
-  .sim[data-mode="flex"] .kpi__body{grid-template-columns:1fr}
+  .sim[data-mode="flex"] .kpi__list{grid-template-columns:1fr 1fr}
 }
 @media (max-width:560px){.sim__map .map__side{grid-template-columns:1fr}}
 

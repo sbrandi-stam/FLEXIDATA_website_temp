@@ -195,10 +195,11 @@ function buildSimUI() {
   });
   $('#playBtn').addEventListener('click', () => { S.playing = !S.playing; syncControls(); });
   $('#restartBtn').addEventListener('click', () => { S.idx = 0; S.dismissed = null; S.chartDirty = true; S.lastI = -1; });
+  buildFlexCharts();
   const lc = $('#leverChecks');
   LEVERS.forEach(([k, , key, col]) => {
     const l = el('label', { class:'check' }, `<input type="checkbox" checked data-lever="${k}"><i style="background:${col}"></i>${i18nSpan(key)}`);
-    l.querySelector('input').addEventListener('change', e => { S.levers[k] = e.target.checked; S.chartDirty = true; });
+    l.querySelector('input').addEventListener('change', e => { S.levers[k] = e.target.checked; S.chartDirty = true; renderLegend(); });
     lc.appendChild(l);
   });
   const cs = $('#cfgSeg');
@@ -221,9 +222,22 @@ function buildSimUI() {
     const bs = $$('button', g); const i = bs.indexOf(document.activeElement); if (i < 0) return;
     const n = bs[(i + (e.key === 'ArrowRight' ? 1 : -1) + bs.length) % bs.length]; n.focus(); n.click(); e.preventDefault();
   }));
-  if (reduced) { $('#rmNote').hidden = false; S.idx = 95.999; }
+  if (reduced) { $('#rmNote').hidden = false; S.idx = 287.999; }
   const ro = new ResizeObserver(() => { sizeCanvas(); S.chartDirty = true; drawChart(); });
-  ro.observe($('.chart-wrap'));
+  ro.observe($('#flexStack'));
+  ro.observe($('#effChart .chart-wrap'));
+}
+function buildFlexCharts() {
+  const box = $('#flexCharts');
+  NODES.forEach(n => {
+    const low = n === 'MI' || n === 'RM';
+    const card = el('article', { class:'chart-card chart-card--node' + (low ? ' is-low' : ''), 'data-node':n });
+    card.innerHTML = `<div class="chart-head"><h3 class="chart-card__title">${i18nSpan('map.nodes.' + n)}</h3></div>
+      <div class="chart-wrap chart-wrap--node"><canvas data-node="${n}" role="img" data-i18n-attr="aria-label:a11y.chart"></canvas></div>
+      <div class="legend" data-legend="${n}"></div>`;
+    card.addEventListener('click', () => setNode(n));
+    box.appendChild(card);
+  });
 }
 
 function setMode(m) {
@@ -231,8 +245,8 @@ function setMode(m) {
   const sim = $('#sim'); sim.classList.add('is-switching');
   setTimeout(() => {
     S.mode = m; sim.dataset.mode = m; $('#mapBox').dataset.mode = m;
-    syncControls(); renderLegend(); renderDays(); renderKPI(); renderMapMode(); onInterval();
-    S.chartDirty = true; drawChart();
+    syncControls(); renderLegend(); renderKPI(); renderMapMode(); onInterval();
+    sizeCanvas(); S.chartDirty = true; drawChart();
     setTimeout(() => sim.classList.remove('is-switching'), 30);
   }, reduced ? 0 : 200);
 }
@@ -272,29 +286,7 @@ function syncControls() {
   const mv = $('#mapCfgVal'); if (mv) mv.textContent = t('sim.eff.configs.' + S.cfg);
   renderBridge(); renderEcon();
   if (S.mode === 'eff' && M.nodes) { renderEffIcons(); renderMapMode(); }
-  $('#clock').hidden = S.mode !== 'flex';
-  $('#chartNote').dataset.i18n = S.mode === 'flex' ? 'sim.flex.definition_flex' : 'sim.eff.baseline_note';
-  translate($('#chartNote'));
-}
-
-function renderDays() {
-  const box = $('#dayTabs'); box.innerHTML = '';
-  const n = S.mode === 'eff' ? 4 : 3;
-  for (let d = 0; d < n; d++) {
-    const b = el('button', { type:'button', class:'day', 'data-day':d },
-      d < 3 ? i18nSpan('sim.day', { n:d + 1 }) + i18nSpan(E.meteo_giorno_key[d], null, 'wx') : i18nSpan('sim.eff.kpi_total'));
-    b.addEventListener('click', () => {
-      if (S.mode === 'flex') { S.idx = d * 96 + (reduced || !S.playing ? 95.999 : 0); S.dismissed = null; S.chartDirty = true; }
-      else { S.kpiDay = d; renderKPI(); }
-      updateDayTabs();
-    });
-    box.appendChild(b);
-  }
-  translate(box); updateDayTabs();
-}
-function updateDayTabs() {
-  const cur = S.mode === 'flex' ? Math.min(2, Math.floor(S.idx / 96)) : S.kpiDay;
-  $$('#dayTabs .day').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.day === cur)));
+  $$('#flexCharts .chart-card--node').forEach(c => c.classList.toggle('is-sel', c.dataset.node === S.node));
 }
 
 function legendItem(sw, key, args, pre) {
@@ -305,33 +297,40 @@ const SW = {
   box:(c, b) => `<i style="background:${c};${b ? `border:1.5px solid ${b};` : ''}border-radius:2px"></i>`,
   down:c => `<svg width="14" height="14" aria-hidden="true"><path d="M1 4H13" stroke="${C.navy}" stroke-width="1"/><rect x="3" y="4" width="8" height="9" fill="${c}"/></svg>`
 };
-function renderLegend() {
+function flexLegendItems(n) {
   const L = [];
-  if (S.mode === 'flex') {
-    const n = S.node;
-    if (F[n].baseline_kw) L.push(legendItem(SW.line(C.navy, '5 4'), 'sim.flex.series.baseline'));
-    L.push(legendItem(SW.line(C.green), 'sim.flex.series.measured'));
-    if (n === 'MI') {
-      L.push(legendItem(SW.line(C.req, '2 3'), 'sim.flex.series.request'));
-      LEVERS.forEach(([k, , key, col]) => { if (S.levers[k]) L.push(legendItem(SW.box(col), key)); });
-      L.push(legendItem(SW.down(C.green), 'sim.flex.precooling'));
-      L.push(legendItem(SW.down(C.sage), 'sim.flex.rebound'));
-    }
-    if (n === 'RM') L.push(legendItem(SW.box('rgba(136,173,167,.45)', C.deep), 'sim.flex.series.received'));
-    L.push(legendItem(SW.box(C.amberSoft, C.amber), 'map.state.notice'));
-    L.push(legendItem(SW.box(C.amberWin), 'sim.flex.window_legend'));
-  } else {
-    const cfg = E.nodi[S.node].configurazioni[S.cfg];
-    L.push(legendItem(SW.line(C.gray), 'sim.eff.series.import', null, 'sim.eff.before'));
-    if (S.cfg !== 'stato_attuale') L.push(legendItem(SW.line(C.deep), 'sim.eff.series.import', null, 'sim.eff.after'));
-    if (cfg.fv_kw) L.push(legendItem(SW.box('rgba(16,160,96,.16)', C.green), 'sim.eff.series.pv'));
-    if (cfg.carica_kw) {
-      L.push(legendItem(SW.box(C.navy), 'sim.eff.series.charge'));
-      L.push(legendItem(SW.box(C.green), 'sim.eff.series.discharge'));
-      L.push(legendItem(SW.line('#5A6B7C'), 'sim.eff.series.soc'));
-    }
-    if (cfg.soglia_picco_kw) L.push(legendItem(SW.line(C.red, '6 4'), 'sim.eff.series.peak_threshold'));
+  if (F[n].baseline_kw) L.push(legendItem(SW.line(C.navy, '5 4'), 'sim.flex.series.baseline'));
+  L.push(legendItem(SW.line(C.green), 'sim.flex.series.measured'));
+  if (n === 'MI') {
+    L.push(legendItem(SW.line(C.req, '2 3'), 'sim.flex.series.request'));
+    LEVERS.forEach(([k, , key, col]) => { if (S.levers[k]) L.push(legendItem(SW.box(col), key)); });
+    L.push(legendItem(SW.down(C.green), 'sim.flex.precooling'));
+    L.push(legendItem(SW.down(C.sage), 'sim.flex.rebound'));
   }
+  if (n === 'RM') L.push(legendItem(SW.box('rgba(136,173,167,.45)', C.deep), 'sim.flex.series.received'));
+  L.push(legendItem(SW.box(C.amberSoft, C.amber), 'map.state.notice'));
+  L.push(legendItem(SW.box(C.amberWin), 'sim.flex.window_legend'));
+  return L;
+}
+function renderLegend() {
+  if (S.mode === 'flex') {
+    $$('#flexCharts [data-legend]').forEach(lg => {
+      lg.innerHTML = flexLegendItems(lg.dataset.legend).join('');
+      translate(lg);
+    });
+    return;
+  }
+  const cfg = E.nodi[S.node].configurazioni[S.cfg];
+  const L = [];
+  L.push(legendItem(SW.line(C.gray), 'sim.eff.series.import', null, 'sim.eff.before'));
+  if (S.cfg !== 'stato_attuale') L.push(legendItem(SW.line(C.deep), 'sim.eff.series.import', null, 'sim.eff.after'));
+  if (cfg.fv_kw) L.push(legendItem(SW.box('rgba(16,160,96,.16)', C.green), 'sim.eff.series.pv'));
+  if (cfg.carica_kw) {
+    L.push(legendItem(SW.box(C.navy), 'sim.eff.series.charge'));
+    L.push(legendItem(SW.box(C.green), 'sim.eff.series.discharge'));
+    L.push(legendItem(SW.line('#5A6B7C'), 'sim.eff.series.soc'));
+  }
+  if (cfg.soglia_picco_kw) L.push(legendItem(SW.line(C.red, '6 4'), 'sim.eff.series.peak_threshold'));
   const lg = $('#legend'); lg.innerHTML = L.join(''); translate(lg);
 }
 
@@ -400,7 +399,7 @@ function kpiFor(node, cfgKey, day) {
   };
 }
 function renderEffKPI(p) {
-  const before = kpiFor(S.node, 'stato_attuale', S.kpiDay), after = kpiFor(S.node, S.cfg, S.kpiDay);
+  const before = kpiFor(S.node, 'stato_attuale', 3), after = kpiFor(S.node, S.cfg, 3);
   const same = S.cfg === 'stato_attuale';
   const cell = (v, unit, d) => (v == null ? '—' : unit === '%' ? pct(v, d) : fmt(v, d));
   const rows = EFF_ROWS.map(([key, f, unit, d, dir, tip, pair]) => {
@@ -419,7 +418,7 @@ function renderEffKPI(p) {
   }).join('');
   p.innerHTML = `<div class="kpi__body">
     <h3 style="margin-bottom:10px">${i18nSpan('map.nodes.' + S.node)}</h3>
-    <p class="note" style="margin:0 0 12px">${i18nSpan('sim.eff.configs.' + S.cfg)} · ${S.kpiDay < 3 ? i18nSpan('sim.day', { n:S.kpiDay + 1 }) : i18nSpan('sim.eff.kpi_total')}</p>
+    <p class="note" style="margin:0 0 12px">${i18nSpan('sim.eff.configs.' + S.cfg)} · ${i18nSpan('sim.eff.kpi_total')}</p>
     <table class="ktable"><thead><tr><th scope="col"></th><th scope="col">${i18nSpan('sim.eff.before')}</th><th scope="col">${i18nSpan('sim.eff.after')}</th><th scope="col" data-i18n-attr="title:sim.eff.kpi.delta;aria-label:sim.eff.kpi.delta">${i18nSpan('sim.eff.kpi.delta_short')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   translate(p);
   renderEcon();
@@ -464,7 +463,6 @@ function onInterval() {
   const i = clamp(Math.floor(S.idx), 0, 287);
   if (S.mode === 'flex') {
     $('#clock').textContent = `${t('sim.time')} ${time(F.timestamp[i])}`;
-    updateDayTabs();
     renderFlexKPI($('#kpiPanel'));
     const { ev, phase } = phaseAt(i);
     const flag = $('#chartFlag');
@@ -492,12 +490,22 @@ function onInterval() {
 
 /* ---------- chart ---------- */
 let ctx, CW = 0, CH = 0;
+function fitCanvas(c) {
+  const r = c.getBoundingClientRect();
+  if (r.width < 2 || r.height < 2) return null;
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  const w = r.width, h = r.height, bw = Math.round(w * dpr), bh = Math.round(h * dpr);
+  const g = c.getContext('2d');
+  if (c.width !== bw || c.height !== bh) { c.width = bw; c.height = bh; }
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { g, w, h };
+}
 function sizeCanvas() {
-  const c = $('#chart'), r = c.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
-  CW = r.width; CH = r.height; c.width = Math.round(CW * dpr); c.height = Math.round(CH * dpr);
-  ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const list = S.mode === 'flex' ? $$('#flexCharts canvas') : [$('#chart')];
+  list.forEach(c => { c._view = fitCanvas(c); });
 }
 function niceTicks(lo, hi, n = 4) {
+  if (!(hi > lo)) return [lo];
   const raw = (hi - lo) / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p;
   const step = (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p;
   const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(6));
@@ -517,86 +525,98 @@ function yAxis(x0, x1, y, ticks, digits = 0, right) {
   });
 }
 function drawChart() {
-  if (!ctx || !DATA) return;
-  ctx.clearRect(0, 0, CW, CH);
-  if (S.mode === 'flex') drawFlex(); else drawEff();
+  if (!DATA) return;
+  const list = S.mode === 'flex' ? $$('#flexCharts canvas') : [$('#chart')];
+  list.forEach(c => {
+    if (!c._view) c._view = fitCanvas(c);
+    const v = c._view;
+    if (!v) return;
+    ctx = v.g; CW = v.w; CH = v.h;
+    ctx.clearRect(0, 0, CW, CH);
+    if (S.mode === 'flex') drawFlex(c.dataset.node); else drawEff();
+  });
 }
-function drawFlex() {
-  const n = S.node, day = Math.min(2, Math.floor(S.idx / 96)), i0 = day * 96, cur = clamp(S.idx - i0, 0, 96);
-  const padL = 50, padR = 14, padT = 44, padB = 24;
-  const low = n === 'MI' || n === 'RM', plotH = CH - padT - padB, topH = low ? plotH * 0.6 : plotH, gap = 16;
+function drawFlex(n) {
+  const cur = clamp(S.idx, 0, 288);
+  const padL = 46, padR = 8, padT = 26, padB = 20, gap = 10;
+  const low = n === 'MI' || n === 'RM', plotH = CH - padT - padB, topH = low ? plotH * 0.58 : plotH;
   const lowTop = padT + topH + gap, lowH = plotH - topH - gap;
-  const x = k => padL + (k / 96) * (CW - padL - padR);
+  const x = k => padL + (k / 288) * (CW - padL - padR);
   const [lo, hi] = S.range[n];
-  const yT = v => padT + topH - ((v - lo) / (hi - lo)) * topH;
-  // bands
-  for (let k = 0; k < 96; k++) {
-    const g = i0 + k;
-    if (F.preavviso_attivo[g] || F.finestra_attiva[g]) {
-      ctx.fillStyle = F.finestra_attiva[g] ? C.amberWin : C.amberSoft;
-      ctx.fillRect(x(k), padT - 6, x(k + 1) - x(k) + 0.5, (low ? lowTop + lowH : padT + topH) - padT + 6);
+  const span = (hi - lo) || 1;
+  const yT = v => padT + topH - ((v - lo) / span) * topH;
+  const plotBottom = low ? lowTop + lowH : padT + topH;
+  for (let k = 0; k < 288; k++) {
+    if (F.preavviso_attivo[k] || F.finestra_attiva[k]) {
+      ctx.fillStyle = F.finestra_attiva[k] ? C.amberWin : C.amberSoft;
+      ctx.fillRect(x(k), padT - 4, Math.max(0.4, x(k + 1) - x(k)), plotBottom - padT + 4);
     }
   }
-  yAxis(padL, CW - padR, yT, niceTicks(lo, hi, 4));
-  // x axis labels
-  ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = C.text;
-  for (let k = 0; k <= 96; k += 12) { const g = Math.min(287, i0 + k); ctx.fillText(k === 96 ? time(F.timestamp[i0]) : time(F.timestamp[g]), x(k), CH - padB + 8); }
-  const upto = cur;
+  yAxis(padL, CW - padR, yT, niceTicks(lo, hi, 3));
+  ctx.font = '600 10px "IBM Plex Mono", monospace';
+  for (let d = 0; d < 3; d++) {
+    const xd = x(d * 96);
+    if (d) { ctx.strokeStyle = '#B9C6D1'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(xd, padT - 14); ctx.lineTo(xd, CH - padB); ctx.stroke(); ctx.setLineDash([]); }
+    ctx.fillStyle = C.navy; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(t('sim.day', { n:d + 1 }), xd + 4, padT - 6);
+  }
+  ctx.font = '10px "IBM Plex Mono", monospace'; ctx.fillStyle = C.text; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let k = 0; k < 288; k += 24) if (k % 96) ctx.fillText(time(F.timestamp[k]), x(k), CH - padB + 4);
   const partial = arr => {
     const pts = [];
-    for (let k = 0; k < 96; k++) {
+    for (let k = 0; k < 288; k++) {
       const c = k + 0.5;
-      if (c > upto) { if (k > 0) { const a = arr[i0 + k - 1], b = arr[i0 + k], f = upto - (k - 0.5); pts.push([x(upto), yT(a + (b - a) * f)]); } break; }
-      pts.push([x(c), yT(arr[i0 + k])]);
+      if (c > cur) {
+        if (k > 0) { const a = arr[k - 1], b = arr[k], f = cur - (k - 0.5); pts.push([x(cur), yT(a + (b - a) * f)]); }
+        break;
+      }
+      pts.push([x(c), yT(arr[k])]);
     }
     return pts;
   };
-  const full = (arr, yf) => arr.slice(i0, i0 + 96).map((v, k) => [x(k + 0.5), yf(v)]);
-  if (F[n].baseline_kw) path(full(F[n].baseline_kw, yT), C.navy, 1.5, [5, 4]);
-  path(partial(F[n].misurato_pod_kw), C.green, 2.4);
-  // lower pane
+  if (F[n].baseline_kw) path(F[n].baseline_kw.map((v, k) => [x(k + 0.5), yT(v)]), C.navy, 1.4, [5, 4]);
+  path(partial(F[n].misurato_pod_kw), C.green, 2);
   if (n === 'MI') {
-    const [a, b] = S.leverRange, yL = v => lowTop + lowH - ((v - a) / (b - a)) * lowH;
+    const [a, b] = S.leverRange, yL = v => lowTop + lowH - ((v - a) / ((b - a) || 1)) * lowH;
     yAxis(padL, CW - padR, yL, niceTicks(a, b, 3));
-    for (let k = 0; k < 96 && k < upto; k++) {
-      const g = i0 + k; let pos = 0, neg = 0; const x0 = x(k) + 0.8, w = Math.max(1, x(k + 1) - x(k) - 1.6);
+    for (let k = 0; k < 288 && k < cur; k++) {
+      let pos = 0, neg = 0; const x0 = x(k), w = Math.max(0.4, x(k + 1) - x(k) - 0.3);
       LEVERS.forEach(([key, f, , col]) => {
-        if (!S.levers[key]) return; const v = F.MI[f][g]; if (!v) return;
+        if (!S.levers[key]) return; const v = F.MI[f][k]; if (!v) return;
         ctx.fillStyle = col;
         if (v > 0) { ctx.fillRect(x0, yL(pos + v), w, yL(pos) - yL(pos + v)); pos += v; }
         else { ctx.fillRect(x0, yL(neg), w, yL(neg + v) - yL(neg)); neg += v; }
       });
     }
     ctx.beginPath(); let on = false;
-    for (let k = 0; k < 96; k++) {
-      const g = i0 + k, r = F.richiesta_kw[g];
-      const ev = EVENTS.find(e => g >= e.s && g < e.f);
+    for (let k = 0; k < 288; k++) {
+      const r = F.richiesta_kw[k];
+      const ev = EVENTS.find(e => k >= e.s && k < e.f);
       if (r > 0 && ev && ev.n <= S.idx) {
         if (!on) { ctx.moveTo(x(k), yL(0)); on = true; }
         ctx.lineTo(x(k), yL(r)); ctx.lineTo(x(k + 1), yL(r));
       } else if (on) { ctx.lineTo(x(k), yL(0)); on = false; }
     }
-    ctx.strokeStyle = C.req; ctx.lineWidth = 2; ctx.setLineDash([2, 3]); ctx.stroke(); ctx.setLineDash([]);
+    if (on) ctx.lineTo(x(288), yL(0));
+    ctx.strokeStyle = C.req; ctx.lineWidth = 1.5; ctx.setLineDash([2, 3]); ctx.stroke(); ctx.setLineDash([]);
   } else if (n === 'RM') {
-    const yL = v => lowTop + lowH - (v / S.recvMax) * lowH;
+    const yL = v => lowTop + lowH - (v / (S.recvMax || 1)) * lowH;
     yAxis(padL, CW - padR, yL, niceTicks(0, S.recvMax, 2));
     const arr = F.RM.carico_ricevuto_kw;
     ctx.beginPath(); ctx.moveTo(x(0.5), yL(0));
     let lastX = x(0.5);
-    for (let k = 0; k < 96 && k + 0.5 <= upto; k++) { lastX = x(k + 0.5); ctx.lineTo(lastX, yL(arr[i0 + k])); }
+    for (let k = 0; k < 288 && k + 0.5 <= cur; k++) { lastX = x(k + 0.5); ctx.lineTo(lastX, yL(arr[k])); }
     ctx.lineTo(lastX, yL(0)); ctx.closePath();
     ctx.fillStyle = 'rgba(136,173,167,.45)'; ctx.fill(); ctx.strokeStyle = C.deep; ctx.lineWidth = 1.5; ctx.stroke();
   }
-  // unit labels
-  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = C.text; ctx.font = '600 11px "IBM Plex Mono", monospace';
-  ctx.fillText(t('units.kw'), 6, padT - 12);
-  // playhead
-  if (!(reduced && !S.playing) || cur < 95.9) {
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = C.text; ctx.font = '600 10px "IBM Plex Mono", monospace';
+  ctx.fillText(t('units.kw'), 4, 12);
+  if (!(reduced && !S.playing) || cur < 287.9) {
     const px = x(cur);
-    ctx.strokeStyle = C.navy; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(px, padT - 6); ctx.lineTo(px, low ? lowTop + lowH : padT + topH); ctx.stroke();
-    const g = Math.min(i0 + 95, Math.floor(S.idx));
-    ctx.fillStyle = C.green; ctx.beginPath(); ctx.arc(px, yT(F[n].misurato_pod_kw[g]), 4.5, 0, 7); ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.strokeStyle = C.navy; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(px, padT - 4); ctx.lineTo(px, plotBottom); ctx.stroke();
+    const g = clamp(Math.floor(S.idx), 0, 287);
+    ctx.fillStyle = C.green; ctx.beginPath(); ctx.arc(px, yT(F[n].misurato_pod_kw[g]), 3.5, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
   }
 }
 function drawEff() {
@@ -1191,7 +1211,7 @@ async function init() {
   prepData();
   buildSimUI(); buildArch(); buildLevers(); buildObjectives(); buildRoadmap(); buildCarousel(); initTips();
   document.documentElement.lang = S.lang;
-  renderDays(); renderLegend();
+  renderLegend();
   setLang(S.lang);
   sizeCanvas();
   observe();

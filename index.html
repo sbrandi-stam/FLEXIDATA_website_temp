@@ -193,35 +193,43 @@
       <p class="rm-note" id="rmNote" hidden data-i18n="a11y.reduced_motion"></p>
 
       <div class="sim" id="sim" data-mode="flex">
+          <div class="node-bar">
+            <span class="ctrl__label" data-i18n="sim.node"></span>
+            <div class="seg seg--sm" id="nodeSeg" role="radiogroup" data-i18n-attr="aria-label:sim.node"></div>
+            <div class="node-bar__speed flex-only">
+              <span class="ctrl__label" data-i18n="sim.speed"></span>
+              <div class="seg seg--sm" id="speedSeg" role="radiogroup" data-i18n-attr="aria-label:sim.speed"></div>
+            </div>
+          </div>
           <div class="cfg-bar eff-only">
             <span class="ctrl__label" data-i18n="sim.eff.config_label"></span>
             <div class="cfg-cards" id="cfgSeg" role="radiogroup" data-i18n-attr="aria-label:sim.eff.config_label"></div>
           </div>
-          <div class="chart-card">
-            <div class="chart-head">
-              <div class="days" id="dayTabs"></div>
+          <div class="chart-stack flex-only" id="flexStack">
+            <div class="flex-status">
               <div class="clock mono" id="clock"></div>
-            </div>
-            <div class="chart-wrap">
-              <canvas id="chart" role="img" data-i18n-attr="aria-label:a11y.chart"></canvas>
               <div class="chart-flag" id="chartFlag" hidden></div>
               <div class="event-card" id="eventCard" hidden></div>
             </div>
+            <div id="flexCharts"></div>
+            <p class="note" data-i18n="sim.flex.definition_flex"></p>
+          </div>
+          <div class="chart-card eff-only" id="effChart">
+            <div class="chart-head">
+              <p class="note" data-i18n="sim.eff.kpi_total"></p>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="chart" role="img" data-i18n-attr="aria-label:a11y.chart"></canvas>
+            </div>
             <div class="legend" id="legend"></div>
-            <p class="note" id="chartNote"></p>
+            <p class="note" id="chartNote" data-i18n="sim.eff.baseline_note"></p>
           </div>
 
           <div class="controls" id="controls">
-            <div class="ctrl">
-              <span class="ctrl__label" data-i18n="sim.node"></span>
-              <div class="seg seg--sm" id="nodeSeg" role="radiogroup" data-i18n-attr="aria-label:sim.node"></div>
-            </div>
             <div class="ctrl flex-only">
               <div class="player">
                 <button type="button" class="btn-ctl" id="playBtn"></button>
                 <button type="button" class="btn-ctl" id="restartBtn" data-i18n="sim.restart"></button>
-                <span class="ctrl__label" data-i18n="sim.speed"></span>
-                <div class="seg seg--sm" id="speedSeg" role="radiogroup" data-i18n-attr="aria-label:sim.speed"></div>
               </div>
             </div>
             <div class="ctrl flex-only" id="leverCtrl">
@@ -268,6 +276,7 @@
             </details>
           </div>
 
+        <div class="sim__side">
         <div class="sim__map" id="map">
           <h3 data-i18n="map.title"></h3>
           <p class="map-cfg eff-only" id="mapCfg"><span data-i18n="sim.eff.config_label"></span> <b id="mapCfgVal"></b></p>
@@ -294,6 +303,7 @@
         </div>
 
         <aside class="kpi" id="kpiPanel" aria-live="off"></aside>
+        </div>
       </div>
     </div>
   </section>
