@@ -275,9 +275,10 @@ function syncControls() {
   pb.dataset.i18n = S.playing ? 'sim.pause' : 'sim.play';
   pb.classList.toggle('btn-ctl--play', !S.playing);
   pb.textContent = t(pb.dataset.i18n);
-  $$('#leverChecks .check').forEach(l => {
-    const dis = S.node !== 'MI'; l.classList.toggle('is-disabled', dis); l.querySelector('input').disabled = dis;
-  });
+  const milan = S.node === 'MI';
+  $('#leverLabel').hidden = !milan;
+  $('#leverChecks').hidden = !milan;
+  $('#leverNote').hidden = milan;
   const nd = E.nodi[S.node], cfg = nd.configurazioni[S.cfg];
   $('#stratMsg').hidden = !S.stratNA;
   $('#bessIdle').hidden = !cfg.accumulo_inattivo;
@@ -1190,6 +1191,12 @@ function initNav() {
   $$('.lang button').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
   const setTop = () => document.documentElement.style.setProperty('--top', $('#topbar').offsetHeight + 'px');
   new ResizeObserver(setTop).observe($('#topbar'));
+  const dock = $('#simDock');
+  if (dock) {
+    const setDock = () => document.documentElement.style.setProperty('--dock', dock.offsetHeight + 'px');
+    new ResizeObserver(setDock).observe(dock);
+    setDock();
+  }
 }
 
 async function init() {

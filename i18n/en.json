@@ -149,6 +149,7 @@
       "below_tolerance": "Below tolerance",
       "tolerance_note": "Illustrative delivery tolerance: {pct}% of the requested quantity per interval.",
       "levers_toggle": "Active levers",
+      "levers_milan_only": "Levers are available for Milan.",
       "definition_flex": "Flexibility = baseline minus power metered at the POD, net of cooling, solar PV and storage.",
       "event": {
         "title": "Event {id} outcome",

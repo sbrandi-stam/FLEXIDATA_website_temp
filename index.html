@@ -186,65 +186,55 @@
         </div>
         <span class="badge-sim" data-i18n="sim.badge_simulated"></span>
       </div>
-      <div class="seg seg--mode" role="radiogroup" id="modeSeg" data-i18n-attr="aria-label:sim.mode_label">
-        <button type="button" role="radio" data-mode="flex" data-i18n="sim.mode_flex"></button>
-        <button type="button" role="radio" data-mode="eff" data-i18n="sim.mode_eff"></button>
-      </div>
       <p class="rm-note" id="rmNote" hidden data-i18n="a11y.reduced_motion"></p>
 
       <div class="sim" id="sim" data-mode="flex">
-          <div class="node-bar">
-            <span class="ctrl__label" data-i18n="sim.node"></span>
-            <div class="seg seg--sm" id="nodeSeg" role="radiogroup" data-i18n-attr="aria-label:sim.node"></div>
-            <div class="node-bar__speed flex-only">
-              <span class="ctrl__label" data-i18n="sim.speed"></span>
-              <div class="seg seg--sm" id="speedSeg" role="radiogroup" data-i18n-attr="aria-label:sim.speed"></div>
+        <div class="sim-dock" id="simDock">
+          <div class="sim-dock__panel">
+            <div class="sim-dock__band">
+              <div class="seg seg--mode" role="radiogroup" id="modeSeg" data-i18n-attr="aria-label:sim.mode_label">
+                <button type="button" role="radio" data-mode="flex" data-i18n="sim.mode_flex"></button>
+                <button type="button" role="radio" data-mode="eff" data-i18n="sim.mode_eff"></button>
+              </div>
+              <div class="node-bar">
+                <span class="ctrl__label" data-i18n="sim.node"></span>
+                <div class="seg seg--sm" id="nodeSeg" role="radiogroup" data-i18n-attr="aria-label:sim.node"></div>
+              </div>
+              <div class="dock-play flex-only">
+                <div class="player">
+                  <button type="button" class="btn-ctl" id="playBtn"></button>
+                  <button type="button" class="btn-ctl" id="restartBtn" data-i18n="sim.restart"></button>
+                </div>
+                <div class="clock mono" id="clock"></div>
+                <div class="node-bar__speed">
+                  <span class="ctrl__label" data-i18n="sim.speed"></span>
+                  <div class="seg seg--sm" id="speedSeg" role="radiogroup" data-i18n-attr="aria-label:sim.speed"></div>
+                </div>
+              </div>
+            </div>
+            <div class="sim-dock__band sim-dock__band--tools">
+              <div class="ctrl flex-only" id="leverCtrl">
+                <span class="ctrl__label" id="leverLabel" data-i18n="sim.flex.levers_toggle"></span>
+                <div class="checks" id="leverChecks"></div>
+                <p class="note sim-dock__hint" id="leverNote" hidden data-i18n="sim.flex.levers_milan_only"></p>
+              </div>
             </div>
           </div>
-          <div class="cfg-bar eff-only">
+        </div>
+        <div class="sim-flow eff-only">
+          <div class="cfg-bar">
             <span class="ctrl__label" data-i18n="sim.eff.config_label"></span>
             <div class="cfg-cards" id="cfgSeg" role="radiogroup" data-i18n-attr="aria-label:sim.eff.config_label"></div>
           </div>
-          <div class="chart-stack flex-only" id="flexStack">
-            <div class="flex-status">
-              <div class="clock mono" id="clock"></div>
-              <div class="chart-flag" id="chartFlag" hidden></div>
-              <div class="event-card" id="eventCard" hidden></div>
-            </div>
-            <div id="flexCharts"></div>
-            <p class="note" data-i18n="sim.flex.definition_flex"></p>
+          <div class="ctrl strat">
+            <span class="ctrl__label" data-i18n="sim.eff.strategy_label"></span>
+            <div class="radios radios--row" id="stratRadios" role="radiogroup" data-i18n-attr="aria-label:sim.eff.strategy_label"></div>
+            <p class="msg msg--warn" id="stratMsg" hidden data-i18n="sim.eff.strategy_unavailable"></p>
+            <p class="msg msg--info" id="bessIdle" hidden data-i18n="sim.eff.bess_idle"></p>
+            <p class="note mono" id="sizes"></p>
           </div>
-          <div class="chart-card eff-only" id="effChart">
-            <div class="chart-head">
-              <p class="note" data-i18n="sim.eff.kpi_total"></p>
-            </div>
-            <div class="chart-wrap">
-              <canvas id="chart" role="img" data-i18n-attr="aria-label:a11y.chart"></canvas>
-            </div>
-            <div class="legend" id="legend"></div>
-            <p class="note" id="chartNote" data-i18n="sim.eff.baseline_note"></p>
-          </div>
-
-          <div class="controls" id="controls">
-            <div class="ctrl flex-only">
-              <div class="player">
-                <button type="button" class="btn-ctl" id="playBtn"></button>
-                <button type="button" class="btn-ctl" id="restartBtn" data-i18n="sim.restart"></button>
-              </div>
-            </div>
-            <div class="ctrl flex-only" id="leverCtrl">
-              <span class="ctrl__label" data-i18n="sim.flex.levers_toggle"></span>
-              <div class="checks" id="leverChecks"></div>
-            </div>
-
-            <div class="ctrl eff-only">
-              <span class="ctrl__label" data-i18n="sim.eff.strategy_label"></span>
-              <div class="radios" id="stratRadios" role="radiogroup" data-i18n-attr="aria-label:sim.eff.strategy_label"></div>
-              <p class="msg msg--warn" id="stratMsg" hidden data-i18n="sim.eff.strategy_unavailable"></p>
-              <p class="msg msg--info" id="bessIdle" hidden data-i18n="sim.eff.bess_idle"></p>
-              <p class="note mono" id="sizes"></p>
-            </div>
-            <div class="ctrl eff-only">
+          <div class="sim-flow__extra">
+            <div class="ctrl">
               <label class="switch">
                 <input type="checkbox" id="bridgeToggle">
                 <span class="switch__track" aria-hidden="true"></span>
@@ -261,7 +251,7 @@
                 <p class="note" data-i18n="sim.eff.baseline_note"></p>
               </div>
             </div>
-            <details class="ctrl eff-only econ">
+            <details class="ctrl econ">
               <summary data-i18n="sim.eff.econ_title"></summary>
               <div class="econ__grid">
                 <label><span data-i18n="sim.eff.econ_capex_pv"></span><input type="number" id="capexPv" min="0" step="50" value="1000" class="mono"></label>
@@ -274,6 +264,26 @@
               </dl>
               <p class="note" data-i18n="sim.eff.econ_note"></p>
             </details>
+          </div>
+        </div>
+        <div class="sim__layout">
+          <div class="chart-stack flex-only" id="flexStack">
+            <div class="flex-status">
+              <div class="chart-flag" id="chartFlag" hidden></div>
+              <div class="event-card" id="eventCard" hidden></div>
+            </div>
+            <div id="flexCharts"></div>
+            <p class="note" data-i18n="sim.flex.definition_flex"></p>
+          </div>
+          <div class="chart-card eff-only" id="effChart">
+            <div class="chart-head">
+              <p class="note" data-i18n="sim.eff.kpi_total"></p>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="chart" role="img" data-i18n-attr="aria-label:a11y.chart"></canvas>
+            </div>
+            <div class="legend" id="legend"></div>
+            <p class="note" id="chartNote" data-i18n="sim.eff.baseline_note"></p>
           </div>
 
         <div class="sim__side">
@@ -303,6 +313,7 @@
         </div>
 
         <aside class="kpi" id="kpiPanel" aria-live="off"></aside>
+        </div>
         </div>
       </div>
     </div>

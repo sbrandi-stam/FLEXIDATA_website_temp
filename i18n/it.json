@@ -149,6 +149,7 @@
       "below_tolerance": "Sotto tolleranza",
       "tolerance_note": "Tolleranza di consegna illustrativa: {pct}% della quantità richiesta per intervallo.",
       "levers_toggle": "Leve attive",
+      "levers_milan_only": "Leve disponibili per Milano.",
       "definition_flex": "Flessibilità = baseline meno potenza misurata al POD, al netto di climatizzazione, fotovoltaico e accumulo.",
       "event": {
         "title": "Esito evento {id}",

@@ -7,7 +7,7 @@
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --r:18px;--shadow:0 12px 30px rgba(10,28,50,.10);
-  --top:112px;
+  --top:112px;--dock:0px;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -144,10 +144,10 @@ section[id],footer[id]{scroll-margin-top:var(--top)}
 .seg button[aria-checked="true"]{background:var(--navy);color:#fff}
 .seg--mode{margin-bottom:20px;flex-wrap:wrap}
 .seg--mode button{font-size:15px;padding:10px 20px}
-.seg--sm button{padding:6px 12px;font-size:14px;min-height:36px}
+.seg--sm button{padding:8px 12px;font-size:14px;min-height:44px}
 .seg--wrap{flex-wrap:wrap}
 .rm-note{font-size:14px;background:#fff;border-left:0;border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:16px}
-.sim{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:20px;align-items:start}
+.sim{display:block;min-width:0}
 .sim__main{display:flex;flex-direction:column;gap:16px;min-width:0}
 .chart-card,.controls,.kpi{background:#fff;border:2.5px solid var(--navy);border-radius:var(--r);box-shadow:var(--shadow)}
 .chart-card{padding:18px 18px 16px}
@@ -161,6 +161,7 @@ section[id],footer[id]{scroll-margin-top:var(--top)}
 .clock{font-size:14px;font-weight:600;background:var(--bg);padding:5px 10px;border-radius:8px}
 .chart-stack{grid-area:chart;display:flex;flex-direction:column;gap:12px;min-width:0}
 .flex-status{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px}
+.flex-status:not(:has(:not([hidden]))){display:none}
 .flex-status .chart-flag{position:static}
 .flex-status .event-card{position:relative;right:auto;top:auto;flex:1 1 280px;max-width:100%}
 #flexCharts{display:flex;flex-direction:column;gap:12px}
@@ -187,17 +188,16 @@ section[id],footer[id]{scroll-margin-top:var(--top)}
 .ctrl__label{font-family:var(--f-mono);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .player{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .player .ctrl__label{margin-left:8px}
-.btn-ctl{border:2px solid var(--navy);background:#fff;border-radius:10px;padding:6px 14px;font-weight:600;min-height:40px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn-ctl{border:2px solid var(--navy);background:#fff;border-radius:10px;padding:6px 14px;font-weight:600;min-height:44px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
 .btn-ctl:hover{background:var(--bg)}
 .btn-ctl--play{background:var(--green-deep);border-color:var(--green-deep);color:#fff}
 .btn-ctl--play:hover{background:var(--navy);border-color:var(--navy)}
 .checks{display:flex;flex-wrap:wrap;gap:8px}
-.check{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:999px;padding:5px 12px 5px 8px;font-size:13px;cursor:pointer;min-height:36px}
+.check{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:999px;padding:6px 12px 6px 8px;font-size:13px;cursor:pointer;min-height:44px}
 .check input{accent-color:var(--green-deep);width:16px;height:16px;margin:0}
 .check i{width:12px;height:12px;border-radius:3px}
 .check.is-disabled{opacity:.45;cursor:not-allowed}
 .sim[data-mode="flex"] .eff-only,.sim[data-mode="eff"] .flex-only{display:none}
-.sim[data-mode="eff"] .controls .eff-only{flex:1 1 220px}
 .node-bar{grid-area:nodes;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;background:#fff;border:2.5px solid var(--navy);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 16px}
 .node-bar .seg{flex-wrap:wrap}
 .node-bar__speed{display:flex;align-items:center;gap:8px;margin-left:auto}
@@ -213,12 +213,14 @@ section[id],footer[id]{scroll-margin-top:var(--top)}
 .map-cfg b{font-weight:700}
 @media (max-width:760px){.cfg-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .radios{display:flex;flex-direction:column;gap:4px}
+.radios.radios--row{flex-direction:row;flex-wrap:wrap;gap:4px 16px}
+.radios.radios--row .radio{min-height:44px}
 .radio{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;min-height:32px}
 .radio input{accent-color:var(--green-deep);width:16px;height:16px;margin:0}
 .msg{font-size:13px;padding:8px 12px;border-radius:10px;max-width:520px}
 .msg--warn{background:var(--amber-soft);color:#5E3A00;border:1.5px solid var(--amber)}
 .msg--info{background:var(--bg);border:1.5px solid var(--sage)}
-.switch{display:inline-flex;align-items:center;gap:10px;font-weight:600;font-size:14px;cursor:pointer;min-height:36px}
+.switch{display:inline-flex;align-items:center;gap:10px;font-weight:600;font-size:14px;cursor:pointer;min-height:44px}
 .switch input{position:absolute;opacity:0;width:1px;height:1px}
 .switch__track{width:40px;height:22px;border-radius:999px;background:var(--line);position:relative;flex:none;transition:background .2s}
 .switch__track::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
@@ -266,7 +268,7 @@ input[type=range]{accent-color:var(--green-deep);width:100%}
 .info::after{content:"i"}
 .info:hover,.info:focus-visible{border-color:var(--navy);color:var(--navy)}
 .tip{position:fixed;z-index:80;max-width:280px;background:var(--navy);color:#fff;font-size:13px;line-height:1.4;padding:10px 12px;border-radius:10px;box-shadow:var(--shadow);pointer-events:none}
-@media (max-width:1100px){.sim{grid-template-columns:1fr}.kpi{position:static}}
+@media (max-width:1100px){.kpi{position:static}}
 
 /* map */
 .map{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;margin-top:28px;align-items:start}
@@ -371,8 +373,36 @@ input[type=range]{accent-color:var(--green-deep);width:100%}
 .footer .wrap,.dark .wrap{position:relative;z-index:1}
 .roadmap__track{padding-top:30px}
 
+/* simulator dock: sticks under the header until the section ends */
+.sim-dock{position:sticky;top:var(--top);z-index:30;background:var(--bg);padding:0 0 12px;margin:0 0 8px;min-width:0;max-width:100%}
+.sim-dock__panel{background:#fff;border:2.5px solid var(--navy);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 16px 14px;display:flex;flex-direction:column;gap:12px;min-width:0;max-width:100%}
+.sim-dock__band{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.sim-dock__band--tools{align-items:flex-start;padding-top:12px;border-top:1.5px solid var(--line)}
+.sim[data-mode="eff"] .sim-dock__band--tools{display:none}
+.sim-dock__hint{margin:0}
+.sim-dock .seg--mode{margin-bottom:0}
+.sim-dock .node-bar{background:none;border:0;box-shadow:none;padding:0;border-radius:0;flex:1 1 240px}
+.sim-dock #leverCtrl{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.dock-play{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-left:auto}
+.sim-dock .node-bar__speed{margin-left:0}
+.sim-dock .clock{min-height:44px;display:inline-flex;align-items:center}
+.sim-flow{background:#fff;border:2.5px solid var(--navy);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px 16px;margin:0 0 16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.sim-flow .cfg-bar{background:none;border:0;box-shadow:none;padding:0;border-radius:0}
+.sim-flow .strat{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 16px}
+.sim-flow .strat .msg,.sim-flow .strat .note{flex-basis:100%;margin-top:0}
+.sim-flow__extra{display:flex;flex-direction:column;gap:12px;padding-top:12px;border-top:1.5px solid var(--line)}
+.sim-flow .econ{border-top:0;padding-top:0;flex-basis:auto}
+@media (max-width:1100px){
+  .dock-play{margin-left:0}
+}
+@media (max-width:760px){
+  .sim-dock__band:not(.sim-dock__band--tools){flex-wrap:nowrap;overflow-x:auto}
+  .sim-dock .node-bar,.dock-play{flex:0 0 auto}
+  .sim-dock .node-bar .seg{flex-wrap:nowrap}
+}
+
 /* simulator + map side by side */
-.sim{grid-template-columns:minmax(0,1.35fr) minmax(320px,440px);grid-template-areas:"nodes nodes" "chart side" "ctrl ctrl"}
+.sim__layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,440px);grid-template-areas:"chart side";gap:20px;align-items:stretch}
 .sim__side{display:contents}
 .sim[data-mode="flex"] .sim__side{display:flex;flex-direction:column;gap:16px;grid-area:side;min-width:0;align-self:stretch}
 .sim[data-mode="flex"] .sim__map{flex:0 0 auto}
@@ -381,12 +411,11 @@ input[type=range]{accent-color:var(--green-deep);width:100%}
 .sim[data-mode="flex"] .kpi__body h3{margin:0!important}
 .sim[data-mode="flex"] .kpi__list{grid-template-columns:1fr 1fr}
 .sim[data-mode="flex"] .kpi__foot{margin-top:auto}
-.sim[data-mode="eff"]{grid-template-columns:minmax(0,1.15fr) minmax(420px,540px);grid-template-areas:"nodes nodes" "cfg cfg" "chart kpi" "map ctrl"}
+.sim[data-mode="eff"] .sim__layout{grid-template-columns:minmax(0,1.15fr) minmax(420px,540px);grid-template-areas:"chart kpi" "map map";align-items:start}
 .sim .chart-card{grid-area:chart;min-width:0}
-.sim .controls{grid-area:ctrl}
 .sim .kpi{grid-area:kpi;min-width:0}
 .sim[data-mode="eff"] .kpi{position:static}
-.sim__map{grid-area:map;background:#fff;border:2.5px solid var(--navy);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;min-width:0;scroll-margin-top:var(--top)}
+.sim__map{grid-area:map;background:#fff;border:2.5px solid var(--navy);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;min-width:0;scroll-margin-top:calc(var(--top) + var(--dock) + 12px)}
 .sim__map-intro{margin:4px 0 12px}
 .sim__map .map{grid-template-columns:1fr;gap:12px;margin-top:0}
 .sim__map .map__stage{box-shadow:none;border-width:1.5px;padding:6px}
@@ -397,10 +426,9 @@ input[type=range]{accent-color:var(--green-deep);width:100%}
 .sim__map .n4{padding:10px}
 .ktable td,.ktable th{padding-left:6px;padding-right:6px}
 @media (max-width:1100px){
-  .sim{grid-template-columns:minmax(0,1fr);grid-template-areas:"nodes" "chart" "map" "kpi" "ctrl"}
+  .sim__layout,.sim[data-mode="eff"] .sim__layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"chart" "map" "kpi"}
   .sim[data-mode="flex"] .sim__side{display:contents}
-  .sim[data-mode="eff"]{grid-template-columns:minmax(0,1fr);grid-template-areas:"nodes" "cfg" "chart" "map" "kpi" "ctrl"}
-  .sim > *{min-width:0;max-width:100%}
+  .sim__layout > *{min-width:0;max-width:100%}
   .sim[data-mode="flex"] .kpi__list{grid-template-columns:1fr 1fr}
 }
 @media (max-width:560px){.sim__map .map__side{grid-template-columns:1fr}}
