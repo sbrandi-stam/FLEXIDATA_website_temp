@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title></title>
+<meta name="description" content="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
+</head>
+<body>
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="leaf" viewBox="0 0 24 14"><path d="M1 7C6-1 16-1 23 3C19 12 9 14 1 7Z" fill="#10A060"/><path d="M1 7L17 5" stroke="#0A1C32" stroke-width="1" fill="none" opacity=".5"/></symbol>
+    <symbol id="divider" viewBox="0 0 1200 60">
+      <g fill="none" stroke="#88ADA7" stroke-width="2" stroke-linecap="round">
+        <path d="M40 30H430L452 10H505"/><path d="M430 30L452 50H490"/><path d="M470 30H575"/>
+        <path d="M1160 30H770L748 10H695"/><path d="M770 30L748 50H710"/><path d="M730 30H625"/>
+      </g>
+      <g fill="#fff" stroke="#88ADA7" stroke-width="2"><circle cx="40" cy="30" r="4"/><circle cx="1160" cy="30" r="4"/><circle cx="490" cy="50" r="3.5"/><circle cx="710" cy="50" r="3.5"/></g>
+      <circle cx="600" cy="30" r="9" fill="none" stroke="#10A060" stroke-width="2.5"/><circle cx="600" cy="30" r="3.5" fill="#10A060"/>
+      <use href="#leaf" x="505" y="3" width="26" height="15"/>
+      <use href="#leaf" x="-695" y="3" width="26" height="15" transform="scale(-1 1)"/>
+      <use href="#leaf" x="575" y="23" width="20" height="12"/>
+      <use href="#leaf" x="-625" y="23" width="20" height="12" transform="scale(-1 1)"/>
+    </symbol>
+    <symbol id="corner" viewBox="0 0 220 220">
+      <g fill="none" stroke-width="2" stroke-linecap="round">
+        <path d="M0 40H90L118 68H170" stroke="currentColor"/><path d="M0 80H50L78 108V150" stroke="currentColor"/><path d="M40 0V30L60 50H130" stroke="currentColor"/><path d="M90 40L110 20H150" stroke="currentColor"/>
+      </g>
+      <g fill="none" stroke="currentColor" stroke-width="2"><circle cx="78" cy="154" r="4"/><circle cx="150" cy="20" r="4"/><circle cx="130" cy="50" r="3.5"/></g>
+      </symbol>
+    <symbol id="i-grid" viewBox="0 0 48 48"><g fill="none" stroke="#0A1C32" stroke-width="2" stroke-linejoin="round"><path d="M16 44L22 8H26L32 44"/><path d="M12 16H36M14 24H34M19 24L29 44M29 24L19 44"/></g><path d="M3 34C7 26 11 26 15 34S23 42 27 34" fill="none" stroke="#10A060" stroke-width="2.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-edge" viewBox="0 0 48 48"><g fill="none" stroke="#0A1C32" stroke-width="2" stroke-linejoin="round"><path d="M10 14L24 7L38 14V36L24 43L10 36Z"/><path d="M10 14L24 21L38 14M24 21V43"/><path d="M14 22L20 25M14 28L20 31"/></g><circle cx="31" cy="27" r="3" fill="#10A060"/><circle cx="31" cy="34" r="2" fill="#10A060"/></symbol>
+    <symbol id="i-platform" viewBox="0 0 48 48"><g fill="none" stroke="#0A1C32" stroke-width="2"><path d="M24 24L9 12M24 24L39 12M24 24L9 38M24 24L39 38"/><circle cx="9" cy="12" r="4" fill="#fff"/><circle cx="39" cy="12" r="4" fill="#fff"/><circle cx="9" cy="38" r="4" fill="#fff"/><circle cx="39" cy="38" r="4" fill="#fff"/></g><rect x="17" y="17" width="14" height="14" rx="3" fill="#10A060"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 48 48"><circle cx="22" cy="24" r="15" fill="none" stroke="#0A1C32" stroke-width="2"/><path d="M22 14V24L29 28" fill="none" stroke="#10A060" stroke-width="2.5" stroke-linecap="round"/><path d="M38 12L44 18L38 24" fill="none" stroke="#0A1C32" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-route" viewBox="0 0 48 48"><g fill="none" stroke="#0A1C32" stroke-width="2"><rect x="3" y="8" width="14" height="12" rx="2"/><rect x="31" y="28" width="14" height="12" rx="2"/></g><path d="M17 14H26L32 20V28" fill="none" stroke="#10A060" stroke-width="2.5" stroke-linecap="round"/><path d="M28 24L32 28L36 24" fill="none" stroke="#10A060" stroke-width="2.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-battery" viewBox="0 0 48 48"><rect x="12" y="9" width="24" height="34" rx="3" fill="none" stroke="#0A1C32" stroke-width="2"/><rect x="19" y="4" width="10" height="5" fill="#0A1C32"/><path d="M26 15L19 27H25L22 37L30 24H24Z" fill="#10A060"/></symbol>
+    <symbol id="i-thermo" viewBox="0 0 48 48"><path d="M16 29V9A5 5 0 0 1 26 9V29A8 8 0 1 1 16 29Z" fill="none" stroke="#0A1C32" stroke-width="2"/><circle cx="21" cy="35" r="4" fill="#10A060"/><path d="M21 31V16" stroke="#10A060" stroke-width="2.5"/><path d="M34 12H44M39 7V17M35.5 8.5L42.5 15.5M42.5 8.5L35.5 15.5" stroke="#0A1C32" stroke-width="1.6"/></symbol>
+    <symbol id="i-solar" viewBox="0 0 48 48"><circle cx="36" cy="11" r="5" fill="#10A060"/><g fill="none" stroke="#0A1C32" stroke-width="2" stroke-linejoin="round"><path d="M4 30L16 18H40L28 30Z"/><path d="M10 24H34M22 18L16 30"/><path d="M16 30V42M28 30V42M12 42H32"/></g></symbol>
+    <symbol id="i-doc" viewBox="0 0 48 48"><path d="M11 5H29L37 13V43H11Z" fill="none" stroke="#0A1C32" stroke-width="2" stroke-linejoin="round"/><path d="M17 22H31M17 28H31M17 34H26" stroke="#10A060" stroke-width="2.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-paper" viewBox="0 0 48 48"><path d="M8 10C16 7 20 8 24 11C28 8 32 7 40 10V40C32 37 28 38 24 41C20 38 16 37 8 40Z" fill="none" stroke="#0A1C32" stroke-width="2" stroke-linejoin="round"/><path d="M24 11V41" stroke="#10A060" stroke-width="2.5"/></symbol>
+    <symbol id="i-brief" viewBox="0 0 48 48"><rect x="6" y="14" width="36" height="26" rx="3" fill="none" stroke="#0A1C32" stroke-width="2"/><path d="M18 14V9H30V14" fill="none" stroke="#0A1C32" stroke-width="2"/><path d="M6 25H42" stroke="#10A060" stroke-width="2.5"/></symbol>
+    <symbol id="i-repo" viewBox="0 0 48 48"><g fill="none" stroke="#0A1C32" stroke-width="2"><ellipse cx="24" cy="11" rx="15" ry="5"/><path d="M9 11V37C9 40 16 42 24 42S39 40 39 37V11"/><path d="M9 24C9 27 16 29 24 29S39 27 39 24"/></g><path d="M29 33L33 36L39 30" fill="none" stroke="#10A060" stroke-width="2.5" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<a class="skip" href="#main" data-i18n="a11y.skip"></a>
+
+<div class="topbar" id="topbar">
+  <div class="banner">
+    <div class="wrap banner__in">
+      <img class="logo-mase" src="logos/mase.png" alt="Logo del Ministero dell'Ambiente e della Sicurezza Energetica" data-i18n-attr="alt:banner.logo_alt">
+      <ul class="banner__refs">
+        <li data-i18n="banner.funded_by"></li>
+        <li class="banner__opt" data-i18n="banner.call"></li>
+        <li class="banner__opt" data-i18n="banner.area"></li>
+        <li><span data-i18n="banner.code_label"></span> <b class="mono" data-i18n="banner.code"></b></li>
+      </ul>
+    </div>
+  </div>
+  <header class="header">
+    <div class="wrap header__in">
+      <a class="brand" href="#top" data-i18n="brand.name"></a>
+      <nav class="nav" id="nav">
+        <a href="#concept" data-i18n="nav.concept"></a>
+        <a href="#architecture" data-i18n="nav.architecture"></a>
+        <a href="#simulator" data-i18n="nav.simulator"></a>
+        <a href="#map" data-i18n="nav.map"></a>
+        <a href="#levers" data-i18n="nav.levers"></a>
+        <a href="#objectives" data-i18n="nav.objectives"></a>
+        <a href="#roadmap" data-i18n="nav.roadmap"></a>
+        <a href="#consortium" data-i18n="nav.consortium"></a>
+        <a href="#results" data-i18n="nav.results"></a>
+        <a href="#contact" data-i18n="nav.contact"></a>
+      </nav>
+      <div class="lang" role="group" data-i18n-attr="aria-label:lang_switch.label">
+        <button type="button" data-lang="it" data-i18n="lang_switch.it" data-i18n-attr="aria-label:lang_switch.it_full"></button>
+        <button type="button" data-lang="en" data-i18n="lang_switch.en" data-i18n-attr="aria-label:lang_switch.en_full"></button>
+      </div>
+      <button type="button" class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="nav" data-i18n-attr="aria-label:nav.menu_open"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+</div>
+
+<main id="main">
+  <section class="hero dark" id="top">
+    <svg class="corner corner--tl" aria-hidden="true"><use href="#corner"/></svg>
+    <div class="wrap hero__in">
+      <div class="hero__text">
+        <p class="eyebrow" data-i18n="hero.eyebrow"></p>
+        <h1 data-i18n="hero.title"></h1>
+        <p class="hero__sub" data-i18n="hero.subtitle"></p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="#simulator" data-i18n="hero.cta_primary"></a>
+          <a class="btn btn--ghost" href="#architecture" data-i18n="hero.cta_secondary"></a>
+        </div>
+      </div>
+      <div class="hero__visual">
+        <svg id="heroMap" viewBox="0 0 400 460" role="img" data-i18n-attr="aria-label:a11y.hero_visual"></svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="concept">
+    <div class="wrap">
+      <h2 data-i18n="concept.title"></h2>
+      <div class="grid-3">
+        <article class="card">
+          <svg class="icon" aria-hidden="true"><use href="#i-grid"/></svg>
+          <h3 data-i18n="concept.c1_title"></h3>
+          <p data-i18n="concept.c1_text"></p>
+        </article>
+        <article class="card">
+          <svg class="icon" aria-hidden="true"><use href="#i-edge"/></svg>
+          <h3 data-i18n="concept.c2_title"></h3>
+          <p data-i18n="concept.c2_text"></p>
+        </article>
+        <article class="card">
+          <svg class="icon" aria-hidden="true"><use href="#i-platform"/></svg>
+          <h3 data-i18n="concept.c3_title"></h3>
+          <p data-i18n="concept.c3_text"></p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <svg class="divider" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><use href="#divider"/></svg>
+
+  <section class="section" id="architecture">
+    <div class="wrap">
+      <h2 data-i18n="arch.title"></h2>
+      <p class="lead" data-i18n="arch.intro"></p>
+      <div class="arch">
+        <div class="arch__diagram" id="archDiagram">
+          <svg class="arch__wires" id="archWires" aria-hidden="true"></svg>
+          <div class="arch__col arch__col--in">
+            <p class="arch__cap" data-i18n="arch.input"></p>
+            <button type="button" class="arch__block" data-layer="field"><span data-i18n="arch.layers.field.title"></span></button>
+          </div>
+          <div class="arch__platform">
+            <p class="arch__cap arch__cap--platform" data-i18n="arch.platform"></p>
+            <div class="arch__grid">
+              <button type="button" class="arch__block" data-layer="twin"><span data-i18n="arch.layers.twin.title"></span></button>
+              <button type="button" class="arch__block" data-layer="simulator"><span data-i18n="arch.layers.simulator.title"></span></button>
+              <button type="button" class="arch__block" data-layer="orchestrator"><span data-i18n="arch.layers.orchestrator.title"></span></button>
+              <button type="button" class="arch__block" data-layer="aggregator"><span data-i18n="arch.layers.aggregator.title"></span></button>
+            </div>
+            <div class="arch__price" id="archPrice"><span data-i18n="arch.price_signal"></span></div>
+          </div>
+          <div class="arch__col arch__col--out">
+            <p class="arch__cap" data-i18n="arch.output"></p>
+            <button type="button" class="arch__block" data-layer="grid"><span data-i18n="arch.layers.grid.title"></span></button>
+          </div>
+        </div>
+        <aside class="arch__panel" id="archPanel" aria-live="polite">
+          <div class="arch__panel-head">
+            <h3 id="archPanelTitle"></h3>
+            <button type="button" class="icon-btn" id="archClose" data-i18n-attr="aria-label:arch.close;title:arch.close">×</button>
+          </div>
+          <dl class="mono-list">
+            <dt data-i18n="arch.function"></dt><dd id="archFn"></dd>
+            <dt data-i18n="arch.inputs"></dt><dd id="archIn"></dd>
+            <dt data-i18n="arch.outputs"></dt><dd id="archOut"></dd>
+          </dl>
+        </aside>
+      </div>
+      <div class="arch__legend">
+        <div class="arch__legend-item"><svg width="44" height="12" aria-hidden="true"><path d="M2 6H36" stroke="#1E7F5C" stroke-width="3"/><path d="M34 1L42 6L34 11Z" fill="#1E7F5C"/></svg><span data-i18n="arch.price_dispatch"></span></div>
+        <div class="arch__legend-item"><svg width="44" height="12" aria-hidden="true"><path d="M2 6H36" stroke="#88ADA7" stroke-width="3" stroke-dasharray="5 4"/><path d="M34 1L42 6L34 11Z" fill="#88ADA7"/></svg><span data-i18n="arch.price_valuation"></span></div>
+        <p class="note" data-i18n="arch.price_note"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tint" id="simulator">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <h2 data-i18n="sim.title"></h2>
+          <p class="lead" data-i18n="sim.intro"></p>
+        </div>
+        <span class="badge-sim" data-i18n="sim.badge_simulated"></span>
+      </div>
+      <div class="seg seg--mode" role="radiogroup" id="modeSeg" data-i18n-attr="aria-label:sim.mode_label">
+        <button type="button" role="radio" data-mode="flex" data-i18n="sim.mode_flex"></button>
+        <button type="button" role="radio" data-mode="eff" data-i18n="sim.mode_eff"></button>
+      </div>
+      <p class="rm-note" id="rmNote" hidden data-i18n="a11y.reduced_motion"></p>
+
+      <div class="sim" id="sim" data-mode="flex">
+          <div class="cfg-bar eff-only">
+            <span class="ctrl__label" data-i18n="sim.eff.config_label"></span>
+            <div class="cfg-cards" id="cfgSeg" role="radiogroup" data-i18n-attr="aria-label:sim.eff.config_label"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="days" id="dayTabs"></div>
+              <div class="clock mono" id="clock"></div>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="chart" role="img" data-i18n-attr="aria-label:a11y.chart"></canvas>
+              <div class="chart-flag" id="chartFlag" hidden></div>
+              <div class="event-card" id="eventCard" hidden></div>
+            </div>
+            <div class="legend" id="legend"></div>
+            <p class="note" id="chartNote"></p>
+          </div>
+
+          <div class="controls" id="controls">
+            <div class="ctrl">
+              <span class="ctrl__label" data-i18n="sim.node"></span>
+              <div class="seg seg--sm" id="nodeSeg" role="radiogroup" data-i18n-attr="aria-label:sim.node"></div>
+            </div>
+            <div class="ctrl flex-only">
+              <div class="player">
+                <button type="button" class="btn-ctl" id="playBtn"></button>
+                <button type="button" class="btn-ctl" id="restartBtn" data-i18n="sim.restart"></button>
+                <span class="ctrl__label" data-i18n="sim.speed"></span>
+                <div class="seg seg--sm" id="speedSeg" role="radiogroup" data-i18n-attr="aria-label:sim.speed"></div>
+              </div>
+            </div>
+            <div class="ctrl flex-only" id="leverCtrl">
+              <span class="ctrl__label" data-i18n="sim.flex.levers_toggle"></span>
+              <div class="checks" id="leverChecks"></div>
+            </div>
+
+            <div class="ctrl eff-only">
+              <span class="ctrl__label" data-i18n="sim.eff.strategy_label"></span>
+              <div class="radios" id="stratRadios" role="radiogroup" data-i18n-attr="aria-label:sim.eff.strategy_label"></div>
+              <p class="msg msg--warn" id="stratMsg" hidden data-i18n="sim.eff.strategy_unavailable"></p>
+              <p class="msg msg--info" id="bessIdle" hidden data-i18n="sim.eff.bess_idle"></p>
+              <p class="note mono" id="sizes"></p>
+            </div>
+            <div class="ctrl eff-only">
+              <label class="switch">
+                <input type="checkbox" id="bridgeToggle">
+                <span class="switch__track" aria-hidden="true"></span>
+                <span data-i18n="sim.eff.bridge_toggle"></span>
+              </label>
+              <div class="bridge" id="bridgeBox" hidden>
+                <div class="soc-bar" aria-hidden="true"><div class="soc-bar__self" id="socSelf"></div><div class="soc-bar__res" id="socRes"></div></div>
+                <div class="soc-legend">
+                  <span><i class="sw sw--self"></i><span data-i18n="sim.eff.bridge_soc_self"></span> <b class="mono" id="socSelfVal"></b></span>
+                  <span><i class="sw sw--res"></i><span data-i18n="sim.eff.bridge_soc_reserve"></span> <b class="mono" id="socResVal"></b></span>
+                </div>
+                <input type="range" id="reserveRange" min="0" max="100" step="5" value="30" data-i18n-attr="aria-label:sim.eff.bridge_soc_reserve">
+                <p class="msg msg--warn" data-i18n="sim.eff.bridge_conflict"></p>
+                <p class="note" data-i18n="sim.eff.baseline_note"></p>
+              </div>
+            </div>
+            <details class="ctrl eff-only econ">
+              <summary data-i18n="sim.eff.econ_title"></summary>
+              <div class="econ__grid">
+                <label><span data-i18n="sim.eff.econ_capex_pv"></span><input type="number" id="capexPv" min="0" step="50" value="1000" class="mono"></label>
+                <label><span data-i18n="sim.eff.econ_capex_bess"></span><input type="number" id="capexBess" min="0" step="25" value="450" class="mono"></label>
+              </div>
+              <dl class="econ__out">
+                <div><dt data-i18n="sim.eff.econ_capex"></dt><dd class="mono" id="econCapex"></dd></div>
+                <div><dt data-i18n="sim.eff.econ_saving"></dt><dd class="mono" id="econSaving"></dd></div>
+                <div><dt data-i18n="sim.eff.econ_payback"></dt><dd class="mono" id="econPayback"></dd></div>
+              </dl>
+              <p class="note" data-i18n="sim.eff.econ_note"></p>
+            </details>
+          </div>
+
+        <div class="sim__map" id="map">
+          <h3 data-i18n="map.title"></h3>
+          <p class="map-cfg eff-only" id="mapCfg"><span data-i18n="sim.eff.config_label"></span> <b id="mapCfgVal"></b></p>
+          <p class="note sim__map-intro" data-i18n="map.intro"></p>
+          <div class="map" id="mapBox" data-mode="flex">
+        <div class="map__stage">
+          <svg id="netMap" viewBox="0 0 400 460" role="img" data-i18n-attr="aria-label:a11y.map"></svg>
+          <div class="map-tip" id="mapTip" role="tooltip" hidden></div>
+        </div>
+        <div class="map__side">
+          <button type="button" class="n4" id="n4Box" data-node="N4">
+            <span class="n4__dot" id="n4Dot"></span>
+            <span class="n4__txt">
+              <b data-i18n="map.nodes.N4"></b>
+              <span class="mono small" data-i18n="map.location_tbd"></span>
+              <span class="mono small n4__state" id="n4State"></span>
+              <span class="n4__eff" id="n4Eff"></span>
+            </span>
+          </button>
+          <div class="map-legend" id="mapLegend"></div>
+          <p class="note" data-i18n="map.note_location"></p>
+        </div>
+          </div>
+        </div>
+
+        <aside class="kpi" id="kpiPanel" aria-live="off"></aside>
+      </div>
+    </div>
+  </section>
+
+
+
+  <section class="section" id="levers">
+    <div class="wrap">
+      <h2 data-i18n="levers.title"></h2>
+      <div class="levers" id="leversGrid"></div>
+    </div>
+  </section>
+
+  <section class="section dark" id="objectives">
+    <svg class="corner corner--tr" aria-hidden="true"><use href="#corner"/></svg>
+    <div class="wrap">
+      <h2 data-i18n="objectives.title"></h2>
+      <div class="objectives" id="objGrid"></div>
+      <p class="disclaimer" data-i18n="objectives.disclaimer"></p>
+    </div>
+  </section>
+
+  <section class="section" id="roadmap">
+    <div class="wrap">
+      <h2 data-i18n="roadmap.title"></h2>
+      <div class="roadmap" id="roadmapBox">
+        <div class="rm-legend" id="rmLegend"></div>
+        <div class="roadmap__scroll">
+          <div class="roadmap__track" id="roadmapTrack"></div>
+        </div>
+        <div class="rm-detail" id="rmDetail" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tint" id="consortium">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 data-i18n="consortium.title"></h2>
+        <div class="car-nav">
+          <button type="button" class="icon-btn icon-btn--lg" id="carPrev" data-i18n-attr="aria-label:consortium.prev;title:consortium.prev">‹</button>
+          <button type="button" class="icon-btn icon-btn--lg" id="carNext" data-i18n-attr="aria-label:consortium.next;title:consortium.next">›</button>
+        </div>
+      </div>
+      <div class="carousel" id="carousel" role="region" tabindex="0" aria-roledescription="carousel" data-i18n-attr="aria-label:a11y.carousel">
+        <div class="carousel__track" id="carTrack"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="results">
+    <div class="wrap">
+      <h2 data-i18n="results.title"></h2>
+      <div class="results">
+        <article class="res"><svg class="icon" aria-hidden="true"><use href="#i-doc"/></svg><h3 data-i18n="results.categories.deliverables"></h3><span class="pill" data-i18n="results.coming_soon"></span></article>
+        <article class="res"><svg class="icon" aria-hidden="true"><use href="#i-paper"/></svg><h3 data-i18n="results.categories.publications"></h3><span class="pill" data-i18n="results.coming_soon"></span></article>
+        <article class="res"><svg class="icon" aria-hidden="true"><use href="#i-brief"/></svg><h3 data-i18n="results.categories.policy"></h3><span class="pill" data-i18n="results.coming_soon"></span></article>
+        <article class="res"><svg class="icon" aria-hidden="true"><use href="#i-repo"/></svg><h3 data-i18n="results.categories.open_access"></h3><span class="pill" data-i18n="results.coming_soon"></span></article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer dark" id="contact">
+  <svg class="corner corner--bl" aria-hidden="true"><use href="#corner"/></svg>
+  <div class="wrap footer__in">
+    <div>
+      <p class="brand brand--footer" data-i18n="brand.name"></p>
+      <ul class="footer__refs">
+        <li data-i18n="banner.funded_by"></li>
+        <li data-i18n="banner.call"></li>
+        <li data-i18n="banner.area"></li>
+        <li><span data-i18n="banner.code_label"></span> <b class="mono" data-i18n="banner.code"></b></li>
+      </ul>
+    </div>
+    <div>
+      <h2 class="footer__h" data-i18n="footer.contacts"></h2>
+      <p class="mono" data-i18n="footer.contact_placeholder"></p>
+    </div>
+  </div>
+  <div class="wrap footer__base">
+    <p data-i18n="footer.disclaimer"></p>
+    <p id="rights" data-i18n="footer.rights"></p>
+  </div>
+</footer>
+
+<script src="assets/embedded-data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
