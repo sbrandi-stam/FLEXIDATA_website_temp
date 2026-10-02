@@ -1135,7 +1135,7 @@ function renderRmDetail() {
 /* ---------- consortium ---------- */
 const PARTNERS = ['mare','stam','cnit','exprivia','smarttrack'];
 const LOGOS = {
-  mare:'logos/Solo-Bianco.webp',
+  mare:'logos/mare-group.png',
   stam:'logos/stam-logo-alt.png',
   cnit:'logos/Logo_Blu_Trasparente-sc.png',
   exprivia:'logos/LogoExprivia_ventennale-400x94.webp',
@@ -1145,7 +1145,7 @@ const CAR = { i:0, paused:false };
 function buildCarousel() {
   const tr = $('#carTrack');
   tr.innerHTML = PARTNERS.map((k, i) => `<article class="partner" role="group" aria-roledescription="slide" data-slide="${i}">
-    <img class="partner-logo${k === 'mare' ? ' partner-logo--on-dark' : ''}" data-logo="${k}" src="${LOGOS[k]}" alt="">
+    <img class="partner-logo${k === 'mare' ? ' partner-logo--stack' : ''}" data-logo="${k}" src="${LOGOS[k]}" alt="">
     <h3>${i18nSpan(`consortium.partners.${k}.name`)}</h3>
     <p>${i18nSpan(`consortium.partners.${k}.role`)}</p>
     <div class="focus">${i18nSpan('consortium.focus')}<b>${i18nSpan(`consortium.partners.${k}.focus`)}</b></div></article>`).join('');
