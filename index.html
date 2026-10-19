@@ -3,14 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title></title>
-<meta name="description" content="">
+<title>FLEXIDATA | Data center edge come risorse di flessibilità per la rete elettrica</title>
+<meta name="description" content="Progetto di ricerca e innovazione finanziato dal MASE per abilitare i data center edge a fornire flessibilità alla rete elettrica e a ridurre le proprie emissioni.">
+<meta name="theme-color" content="#0A1C32">
+<meta property="og:type" content="website">
+<meta property="og:title" content="FLEXIDATA | Data center edge come risorse di flessibilità per la rete elettrica">
+<meta property="og:description" content="Progetto di ricerca e innovazione finanziato dal MASE per abilitare i data center edge a fornire flessibilità alla rete elettrica e a ridurre le proprie emissioni.">
+<meta property="og:locale" content="it_IT">
+<meta property="og:locale:alternate" content="en_GB">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/styles.css">
-<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
 </head>
 <body>
 <svg class="sprite" aria-hidden="true" focusable="false">
@@ -54,7 +58,7 @@
 <div class="topbar" id="topbar">
   <div class="banner">
     <div class="wrap banner__in">
-      <img class="logo-mase" src="logos/mase.png" alt="Logo del Ministero dell'Ambiente e della Sicurezza Energetica" data-i18n-attr="alt:banner.logo_alt">
+      <img class="logo-mase" src="logos/mase.png" width="280" height="42" alt="Logo del Ministero dell'Ambiente e della Sicurezza Energetica" data-i18n-attr="alt:banner.logo_alt">
       <ul class="banner__refs">
         <li data-i18n="banner.funded_by"></li>
         <li class="banner__opt" data-i18n="banner.call"></li>
@@ -70,7 +74,6 @@
         <a href="#concept" data-i18n="nav.concept"></a>
         <a href="#architecture" data-i18n="nav.architecture"></a>
         <a href="#simulator" data-i18n="nav.simulator"></a>
-        <a href="#map" data-i18n="nav.map"></a>
         <a href="#levers" data-i18n="nav.levers"></a>
         <a href="#objectives" data-i18n="nav.objectives"></a>
         <a href="#roadmap" data-i18n="nav.roadmap"></a>
@@ -157,9 +160,9 @@
             <button type="button" class="arch__block" data-layer="grid"><span data-i18n="arch.layers.grid.title"></span></button>
           </div>
         </div>
-        <aside class="arch__panel" id="archPanel" aria-live="polite">
+        <aside class="arch__panel" id="archPanel">
           <div class="arch__panel-head">
-            <h3 id="archPanelTitle"></h3>
+            <h3 id="archPanelTitle" aria-live="polite"></h3>
             <button type="button" class="icon-btn" id="archClose" data-i18n-attr="aria-label:arch.close;title:arch.close">×</button>
           </div>
           <dl class="mono-list">
@@ -202,6 +205,7 @@
               </div>
               <div class="dock-play flex-only">
                 <div class="player">
+                  <button type="button" class="btn-ctl btn-ctl--tools" id="leverToggle" aria-expanded="false" aria-controls="leverCtrl" data-i18n="sim.flex.levers_toggle"></button>
                   <button type="button" class="btn-ctl" id="playBtn"></button>
                   <button type="button" class="btn-ctl" id="restartBtn" data-i18n="sim.restart"></button>
                 </div>
@@ -355,6 +359,7 @@
       <div class="sec-head">
         <h2 data-i18n="consortium.title"></h2>
         <div class="car-nav">
+          <button type="button" class="icon-btn icon-btn--lg icon-btn--pause" id="carPause" aria-pressed="false"></button>
           <button type="button" class="icon-btn icon-btn--lg" id="carPrev" data-i18n-attr="aria-label:consortium.prev;title:consortium.prev">‹</button>
           <button type="button" class="icon-btn icon-btn--lg" id="carNext" data-i18n-attr="aria-label:consortium.next;title:consortium.next">›</button>
         </div>
@@ -369,10 +374,13 @@
     <div class="wrap">
       <h2 data-i18n="results.title"></h2>
       <div class="results">
-        <article class="res"><svg class="icon" aria-hidden="true"><use href="#i-doc"/></svg><h3 data-i18n="results.categories.deliverables"></h3><span class="pill" data-i18n="results.coming_soon"></span></article>
-        <article class="res"><svg class="icon" aria-hidden="true"><use href="#i-paper"/></svg><h3 data-i18n="results.categories.publications"></h3><span class="pill" data-i18n="results.coming_soon"></span></article>
-        <article class="res"><svg class="icon" aria-hidden="true"><use href="#i-brief"/></svg><h3 data-i18n="results.categories.policy"></h3><span class="pill" data-i18n="results.coming_soon"></span></article>
-        <article class="res"><svg class="icon" aria-hidden="true"><use href="#i-repo"/></svg><h3 data-i18n="results.categories.open_access"></h3><span class="pill" data-i18n="results.coming_soon"></span></article>
+        <ul class="results__list">
+          <li class="res"><svg class="icon" aria-hidden="true"><use href="#i-doc"/></svg><span data-i18n="results.categories.deliverables"></span></li>
+          <li class="res"><svg class="icon" aria-hidden="true"><use href="#i-paper"/></svg><span data-i18n="results.categories.publications"></span></li>
+          <li class="res"><svg class="icon" aria-hidden="true"><use href="#i-brief"/></svg><span data-i18n="results.categories.policy"></span></li>
+          <li class="res"><svg class="icon" aria-hidden="true"><use href="#i-repo"/></svg><span data-i18n="results.categories.open_access"></span></li>
+        </ul>
+        <span class="pill" data-i18n="results.coming_soon"></span>
       </div>
     </div>
   </section>
@@ -401,7 +409,7 @@
   </div>
 </footer>
 
-<script src="assets/embedded-data.js"></script>
+<script src="assets/italy-outline.js"></script>
 <script src="assets/app.js"></script>
 </body>
 </html>

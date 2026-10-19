@@ -246,6 +246,12 @@
       "NA": "Nodo edge Napoli",
       "N4": "Nodo edge 4"
     },
+    "nodes_short": {
+      "MI": "Milano",
+      "RM": "Roma",
+      "NA": "Napoli",
+      "N4": "Nodo 4"
+    },
     "state": {
       "normal": "Normale",
       "request": "Richiesta attiva",
@@ -487,6 +493,8 @@
     "title": "Il consorzio",
     "prev": "Precedente",
     "next": "Successivo",
+    "pause": "Metti in pausa lo scorrimento",
+    "play": "Riprendi lo scorrimento",
     "focus": "Focus",
     "partners": {
       "mare": {
@@ -507,7 +515,7 @@
       "exprivia": {
         "name": "Exprivia",
         "role": "Piattaforme cloud-native, AI e Big Data",
-        "focus": "Algoritmi predittivi dei carichi computazionali, microservizi"
+        "focus": "Simulatore energetico dei data center, orchestrazione dei carichi computazionali, algoritmi predittivi dei consumi HVAC, microservizi"
       },
       "smarttrack": {
         "name": "Smart Track",

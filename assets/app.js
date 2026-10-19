@@ -5,8 +5,7 @@ const CONFIG = {
   projectStart: '2025-07-01',   // M1 = luglio 2025 (dallo schedule: M12 = 30/06/2026)
   months: 30,
   secondsPerDay: 120,           // 1 giorno simulato in circa 2 minuti a velocità 1x
-  lsKey: 'flexidata.lang',
-  atlas: 'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json'
+  lsKey: 'flexidata.lang'
 };
 const C = { navy:'#0A1C32', green:'#10A060', deep:'#1E7F5C', neon:'#34D98E', sage:'#88ADA7', amber:'#E39B2E',
   amberSoft:'rgba(227,155,46,.15)', amberWin:'rgba(227,155,46,.36)', req:'#A55F00', gray:'#8B98A5', grid:'#E4EAEF', text:'#44566A', red:'#B8342B' };
@@ -17,7 +16,8 @@ const LEVERS = [['spatial','leva_spostamento_spaziale_kw','sim.flex.series.lever
 const CFGS = ['stato_attuale','fv','fv_accumulo_autoconsumo','fv_accumulo_riduzione_picchi'];
 const STRATS = ['autoconsumo','riduzione_picchi','fasce','riserva'];
 const STRAT_CFG = { autoconsumo:'fv_accumulo_autoconsumo', riduzione_picchi:'fv_accumulo_riduzione_picchi' };
-const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rmq = matchMedia('(prefers-reduced-motion: reduce)');
+let reduced = rmq.matches;
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -105,10 +105,21 @@ async function loadJSON(url, embedId, embedKey) {
     if (!r.ok) throw new Error(url + ' ' + r.status);
     return await r.json();
   } catch (err) {
-    const bag = window.__FLEX_EMBED__;
+    const bag = await loadEmbed();
     if (bag && embedKey && bag[embedKey]) return bag[embedKey];
     throw err;
   }
+}
+// the embedded copy is only needed when fetch fails (e.g. index.html opened from disk)
+let embedP;
+function loadEmbed() {
+  if (window.__FLEX_EMBED__) return Promise.resolve(window.__FLEX_EMBED__);
+  return embedP = embedP || new Promise(res => {
+    const sc = document.createElement('script');
+    sc.src = 'assets/embedded-data.js';
+    sc.onload = () => res(window.__FLEX_EMBED__); sc.onerror = () => res(null);
+    document.head.appendChild(sc);
+  });
 }
 let T0 = 0;
 const idxOf = ts => Math.round((Date.parse(ts + ':00Z') - T0) / 900000);
@@ -152,17 +163,29 @@ function observe() {
   const io = new IntersectionObserver(es => es.forEach(e => {
     const k = e.target.id === 'top' ? 'hero' : e.target.id;
     vis[k] = e.isIntersecting;
+    if (e.isIntersecting) kick();
     if (k === 'simulator' && e.isIntersecting) { S.chartDirty = true; drawChart(); }
     if (k === 'objectives' && e.isIntersecting) startCounters();
   }), { threshold:0.05 });
   ['top','architecture','simulator','map','objectives','consortium'].forEach(id => io.observe(document.getElementById(id)));
-  const links = $$('.nav a');
-  const io2 = new IntersectionObserver(es => es.forEach(e => {
-    if (e.isIntersecting) links.forEach(a => a.classList.toggle('is-active', a.getAttribute('href') === '#' + e.target.id));
-  }), { rootMargin:'-45% 0px -50% 0px' });
-  links.forEach(a => { const s = document.querySelector(a.getAttribute('href')); if (s) io2.observe(s); });
+  // scroll-spy: the active link is the last section whose top has passed the line under the header
+  const links = $$('.nav a'), secs = links.map(a => document.querySelector(a.getAttribute('href')));
+  let spyQueued = false;
+  const spy = () => {
+    spyQueued = false;
+    const line = $('#topbar').offsetHeight + innerHeight * 0.25;
+    let cur = -1;
+    secs.forEach((s, i) => { if (s && s.getBoundingClientRect().top <= line) cur = i; });
+    if (innerHeight + scrollY >= document.documentElement.scrollHeight - 2) cur = secs.length - 1;
+    links.forEach((a, i) => { a.classList.toggle('is-active', i === cur); if (i === cur) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
+  };
+  addEventListener('scroll', () => { if (!spyQueued) { spyQueued = true; requestAnimationFrame(spy); } }, { passive:true });
+  addEventListener('resize', spy);
+  spy();
 }
-let lastTs = 0;
+let lastTs = 0, looping = false;
+// the loop only runs while something animated is on screen
+function kick() { if (!looping && DATA) { looping = true; lastTs = 0; requestAnimationFrame(frame); } }
 function frame(ts) {
   const dt = lastTs ? Math.min(0.1, (ts - lastTs) / 1000) : 0; lastTs = ts;
   const simOn = vis.simulator || vis.map;
@@ -177,7 +200,31 @@ function frame(ts) {
   if (vis.map) mapFrame(ts, dt);
   if (vis.hero && !reduced) heroFrame(ts);
   if (vis.architecture && !reduced) archFrame(ts);
-  requestAnimationFrame(frame);
+  if (simOn || (!reduced && (vis.hero || vis.architecture))) requestAnimationFrame(frame);
+  else looping = false;
+}
+
+/* ---------- simulator: dock ---------- */
+function initDock() {
+  const dock = $('#simDock'), sentinel = el('div', { class:'sim-dock__sentinel', 'aria-hidden':'true' });
+  dock.before(sentinel);
+  // a scroll check rather than an IntersectionObserver: anchor jumps can skip the sentinel's visible phase
+  let queued = false;
+  const check = () => {
+    queued = false;
+    const stuck = sentinel.getBoundingClientRect().top < $('#topbar').offsetHeight;
+    if (stuck === dock.classList.contains('is-stuck')) return;
+    // the compact dock is shorter: the sentinel takes up the difference so the charts below don't jump
+    const h0 = dock.offsetHeight;
+    dock.classList.toggle('is-stuck', stuck);
+    sentinel.style.height = stuck ? (1 + h0 - dock.offsetHeight) + 'px' : '';
+  };
+  addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(check); } }, { passive:true });
+  check();
+  $('#leverToggle').addEventListener('click', () => {
+    const open = dock.classList.toggle('is-tools-open');
+    $('#leverToggle').setAttribute('aria-expanded', String(open));
+  });
 }
 
 /* ---------- simulator: UI ---------- */
@@ -185,7 +232,7 @@ function buildSimUI() {
   $$('#modeSeg button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
   const ns = $('#nodeSeg');
   NODES.forEach(n => {
-    const b = el('button', { type:'button', role:'radio', 'data-node':n }, i18nSpan('map.nodes.' + n));
+    const b = el('button', { type:'button', role:'radio', 'data-node':n }, i18nSpan('map.nodes_short.' + n));
     b.addEventListener('click', () => setNode(n)); ns.appendChild(b);
   });
   const sp = $('#speedSeg');
@@ -217,11 +264,18 @@ function buildSimUI() {
   $('#capexPv').addEventListener('input', e => { S.capexPv = Math.max(0, +e.target.value || 0); renderEcon(); });
   $('#capexBess').addEventListener('input', e => { S.capexBess = Math.max(0, +e.target.value || 0); renderEcon(); });
   // arrow keys inside radiogroups
+  // arrow keys inside radiogroups (roving tabindex is kept in syncControls)
+  const KEYS = { ArrowRight:1, ArrowDown:1, ArrowLeft:-1, ArrowUp:-1 };
   $$('[role="radiogroup"].seg, #cfgSeg').forEach(g => g.addEventListener('keydown', e => {
-    if (!['ArrowLeft','ArrowRight'].includes(e.key)) return;
     const bs = $$('button', g); const i = bs.indexOf(document.activeElement); if (i < 0) return;
-    const n = bs[(i + (e.key === 'ArrowRight' ? 1 : -1) + bs.length) % bs.length]; n.focus(); n.click(); e.preventDefault();
+    let j;
+    if (e.key in KEYS) j = (i + KEYS[e.key] + bs.length) % bs.length;
+    else if (e.key === 'Home') j = 0;
+    else if (e.key === 'End') j = bs.length - 1;
+    else return;
+    bs[j].focus(); bs[j].click(); e.preventDefault();
   }));
+  initDock();
   if (reduced) { $('#rmNote').hidden = false; S.idx = 287.999; }
   const ro = new ResizeObserver(() => { sizeCanvas(); S.chartDirty = true; drawChart(); });
   ro.observe($('#flexStack'));
@@ -270,6 +324,7 @@ function syncControls() {
   $$('#nodeSeg button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.node === S.node)));
   $$('#speedSeg button').forEach(b => b.setAttribute('aria-checked', String(+b.dataset.speed === S.speed)));
   $$('#cfgSeg button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.cfg === S.cfg)));
+  $$('[role="radiogroup"] > button[role="radio"]').forEach(b => { b.tabIndex = b.getAttribute('aria-checked') === 'true' ? 0 : -1; });
   $$('#stratRadios input').forEach(i => { i.checked = i.value === S.strat; });
   const pb = $('#playBtn');
   pb.dataset.i18n = S.playing ? 'sim.pause' : 'sim.play';
@@ -688,16 +743,8 @@ function trace(pts) {
   }
   return d;
 }
-async function loadItaly() {
-  try {
-    if (!window.d3 || !window.topojson) throw new Error('d3 unavailable');
-    const topo = await (await fetch(CONFIG.atlas)).json();
-    const feats = topojson.feature(topo, topo.objects.countries).features;
-    const it = feats.find(f => f.id === '380');
-    const gp = d3.geoPath(d3.geoTransform({ point(lon, lat) { const [x, y] = proj([lon, lat]); this.stream.point(x, y); } }));
-    return gp(it);
-  } catch (e) { console.warn('[map] outline not loaded:', e.message); return null; }
-}
+// precomputed with the projection above by tools/build-italy.mjs
+const italyOutline = () => window.__FLEX_ITALY__ || null;
 
 /* ---------- hero ---------- */
 let heroPulse, heroRings = [], heroLen = 0;
@@ -1135,17 +1182,17 @@ function renderRmDetail() {
 /* ---------- consortium ---------- */
 const PARTNERS = ['mare','stam','cnit','exprivia','smarttrack'];
 const LOGOS = {
-  mare:'logos/mare-group.png',
+  mare:'logos/mare-group.webp',
   stam:'logos/stam-logo-alt.png',
   cnit:'logos/Logo_Blu_Trasparente-sc.png',
   exprivia:'logos/LogoExprivia_ventennale-400x94.webp',
-  smarttrack:'logos/Logo_smart_track_trasparente.png'
+  smarttrack:'logos/smart-track.webp'
 };
-const CAR = { i:0, paused:false };
+const CAR = { i:0, paused:false, stopped:false };
 function buildCarousel() {
   const tr = $('#carTrack');
   tr.innerHTML = PARTNERS.map((k, i) => `<article class="partner" role="group" aria-roledescription="slide" data-slide="${i}">
-    <img class="partner-logo${k === 'mare' ? ' partner-logo--stack' : ''}" data-logo="${k}" src="${LOGOS[k]}" alt="">
+    <div class="partner-logo"><img data-logo="${k}" src="${LOGOS[k]}" alt="" loading="lazy" decoding="async"></div>
     <h3>${i18nSpan(`consortium.partners.${k}.name`)}</h3>
     <p>${i18nSpan(`consortium.partners.${k}.role`)}</p>
     <div class="focus">${i18nSpan('consortium.focus')}<b>${i18nSpan(`consortium.partners.${k}.focus`)}</b></div></article>`).join('');
@@ -1155,9 +1202,19 @@ function buildCarousel() {
   car.addEventListener('mouseenter', () => { CAR.paused = true; }); car.addEventListener('mouseleave', () => { CAR.paused = false; });
   car.addEventListener('focusin', () => { CAR.paused = true; }); car.addEventListener('focusout', () => { CAR.paused = false; });
   car.addEventListener('keydown', e => { if (e.key === 'ArrowRight') { go(1); e.preventDefault(); } if (e.key === 'ArrowLeft') { go(-1); e.preventDefault(); } });
-  addEventListener('resize', () => go(0));
-  if (!reduced) setInterval(() => { if (!CAR.paused && vis.consortium && !document.hidden) go(1); }, 6000);
+  new ResizeObserver(() => go(0)).observe(car);
+  const pb = $('#carPause');
+  pb.addEventListener('click', () => { CAR.stopped = !CAR.stopped; syncCarPause(); });
+  syncCarPause();
+  setInterval(() => { if (!reduced && !CAR.stopped && !CAR.paused && vis.consortium && !document.hidden) go(1); }, 6000);
   go(0);
+}
+function syncCarPause() {
+  const pb = $('#carPause'), stopped = CAR.stopped || reduced;
+  pb.setAttribute('aria-pressed', String(stopped));
+  pb.textContent = stopped ? '▶' : '❚❚';
+  pb.dataset.i18nAttr = `aria-label:consortium.${stopped ? 'play' : 'pause'};title:consortium.${stopped ? 'play' : 'pause'}`;
+  translate(pb.parentNode);
 }
 function perView() { return innerWidth <= 620 ? 1 : innerWidth <= 980 ? 2 : 3; }
 function go(d) {
@@ -1178,16 +1235,27 @@ function refreshDynamic() {
   $$('.partner').forEach((p, i) => p.setAttribute('aria-label', t('consortium.slide', { n:i + 1, tot:PARTNERS.length })));
   $$('[data-logo]').forEach(n => { n.alt = t('consortium.logo_alt', { name:t(`consortium.partners.${n.dataset.logo}.name`) }); });
   const mb = $('#menuBtn'); mb.dataset.i18nAttr = `aria-label:${mb.getAttribute('aria-expanded') === 'true' ? 'nav.menu_close' : 'nav.menu_open'}`; translate(mb.parentNode);
+  syncCarPause();
   if (M.nodes) updateMapState(clamp(Math.floor(S.idx), 0, 287));
 }
 function initNav() {
   const mb = $('#menuBtn'), nav = $('#nav');
-  mb.addEventListener('click', () => {
-    const open = mb.getAttribute('aria-expanded') !== 'true';
+  const setMenu = (open, focusBtn) => {
     mb.setAttribute('aria-expanded', String(open)); nav.classList.toggle('is-open', open);
-    mb.dataset.i18nAttr = `aria-label:${open ? 'nav.menu_close' : 'nav.menu_open'}`; translate(mb.parentNode);
-  });
-  nav.addEventListener('click', e => { if (e.target.closest('a')) { mb.setAttribute('aria-expanded', 'false'); nav.classList.remove('is-open'); } });
+    mb.dataset.i18nAttr = `aria-label:${open ? 'nav.menu_close' : 'nav.menu_open'}`;
+    if (D.it) translate(mb.parentNode);
+    if (open) { const a = $('a', nav); if (a) a.focus(); } else if (focusBtn) mb.focus();
+  };
+  const isOpen = () => mb.getAttribute('aria-expanded') === 'true';
+  mb.addEventListener('click', () => setMenu(!isOpen()));
+  nav.addEventListener('click', e => { if (e.target.closest('a')) setMenu(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen()) setMenu(false, true); });
+  document.addEventListener('click', e => { if (isOpen() && !e.target.closest('#nav, #menuBtn')) setMenu(false); });
+  // on small screens the ministry banner folds away once the page is scrolled
+  const tb = $('#topbar');
+  let compact = false;
+  const onScroll = () => { const c = compact ? scrollY > 8 : scrollY > 120; if (c !== compact) { compact = c; tb.classList.toggle('is-compact', c); } };
+  addEventListener('scroll', onScroll, { passive:true }); onScroll();
   $$('.lang button').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
   const setTop = () => document.documentElement.style.setProperty('--top', $('#topbar').offsetHeight + 'px');
   new ResizeObserver(setTop).observe($('#topbar'));
@@ -1222,11 +1290,12 @@ async function init() {
   setLang(S.lang);
   sizeCanvas();
   observe();
-  const outline = await loadItaly();
+  const outline = italyOutline();
   buildHero(outline); buildMap(outline);
   drawWires();
   onInterval(); drawChart();
-  requestAnimationFrame(frame);
+  kick();
+  rmq.addEventListener('change', e => { reduced = e.matches; $('#rmNote').hidden = !reduced; if (reduced) S.playing = false; syncControls(); kick(); });
 }
 init();
 })();
